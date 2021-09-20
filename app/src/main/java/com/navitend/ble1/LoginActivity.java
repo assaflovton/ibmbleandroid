@@ -120,7 +120,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if (task.isSuccessful()) {
                     switchToMainActivity();
-                    switchToMainActivity();
+
                 } else {
                     Toast t  = Toast.makeText(LoginActivity.this, "Failed to login: " + task.getException().getMessage(),  Toast.LENGTH_LONG);
                 }
@@ -129,8 +129,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
     }
     private void switchToMainActivity() {
-        //need to do saving
         Intent switchActivityIntent = new Intent(this, MainActivity.class);
+        switchActivityIntent.putExtra("email", email_et.getText().toString());
         startActivity(switchActivityIntent);
     }
 
