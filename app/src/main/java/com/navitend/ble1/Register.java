@@ -1,9 +1,7 @@
 package com.navitend.ble1;
 
 import android.content.Intent;
-
 import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Patterns;
@@ -16,9 +14,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
-
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -46,12 +42,10 @@ public class Register extends AppCompatActivity implements View.OnClickListener 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
-
+        // database object
         mAuth = FirebaseAuth.getInstance();
-
         register_btn = findViewById(R.id.register_btn);
         register_btn.setOnClickListener(this);
-
         name_et = findViewById(R.id.name_reg_et);
         email_et = findViewById(R.id.email_reg_et);
         password_et = findViewById(R.id.password_reg_et);
@@ -60,11 +54,13 @@ public class Register extends AppCompatActivity implements View.OnClickListener 
         home_tv.setOnClickListener(this);
         logo_iv = findViewById(R.id.logo_iv_reg);
         logo_iv.setOnClickListener(this);
+        //logo spin
         rotateAnimation();
 
 
     }
 
+    // take the input from the activity and creates a new user in the database
     private void registerUser() {
         //need to do saving
         final String name = name_et.getText().toString().trim();
@@ -113,26 +109,20 @@ public class Register extends AppCompatActivity implements View.OnClickListener 
 
     }
 
+    // move between activies
     private void switchToLoginActivity() {
         //need to do saving
         Intent switchActivityIntent = new Intent(this, LoginActivity.class);
         startActivity(switchActivityIntent);
     }
 
-    private void switchToRegActivity() {
-        //need to do saving
-        Intent switchActivityIntent = new Intent(this, Register.class);
-        startActivity(switchActivityIntent);
-    }
-
     private void switchToMainActivity(String email) {
-        //need to do saving
         Intent switchActivityIntent = new Intent(this, MainActivity.class);
         switchActivityIntent.putExtra("email", email);
         startActivity(switchActivityIntent);
     }
 
-
+    // reguarding view
     private void rotateAnimation() {
 
         rotate_animation = AnimationUtils.loadAnimation(this, R.anim.rotate);

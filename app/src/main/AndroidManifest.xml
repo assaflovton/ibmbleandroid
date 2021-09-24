@@ -23,6 +23,9 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
+            android:name=".SamplesActivity"
+            android:exported="true" />
+        <activity
             android:name=".Register"
             android:exported="true" />
         <activity

@@ -1,9 +1,7 @@
 package com.navitend.ble1;
 
 import android.os.Build;
-
 import androidx.annotation.RequiresApi;
-
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -46,7 +44,11 @@ public class SampleData {
             data_x.add(i); }
         for (Float i : y) {
             data_y.add(i); }
-        this.date =  new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z").format(Calendar.getInstance().getTime());
+        this.date =  new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z").format(Calendar.getInstance().getTime());
 
+    }
+
+    public String getDate() {
+        return date;
     }
 }

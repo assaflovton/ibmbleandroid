@@ -5,7 +5,10 @@ import android.content.Intent;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Calendar;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.util.Log;
@@ -23,6 +26,11 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -42,10 +50,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
-                .detectLeakedClosableObjects()
-                .penaltyLog()
-                .build());
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         login_btn = findViewById(R.id.login_btn);
@@ -60,41 +64,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         register_tv.setOnClickListener(this);
         mAuth = FirebaseAuth.getInstance();
         requestLocationPermission();
-
     }
-
-    private void switchToRegisterActivity() {
-        Intent switchActivityIntent = new Intent(this, Register.class);
-        startActivity(switchActivityIntent);
-
-    }
-
-    private void rotateAnimation() {
-
-        rotate_animation = AnimationUtils.loadAnimation(this, R.anim.rotate);
-        logo_iv.startAnimation(rotate_animation);
-    }
-
-    @Override
-    public void onClick(View v) {
-
-        switch (v.getId()) {
-
-            case R.id.login_btn:
-                userLogin();
-                break;
-            case R.id.register_tv:
-                switchToRegisterActivity();
-                break;
-            case R.id.logo_iv_login:
-                rotateAnimation();
-                break;
-
-        }
-
-
-    }
-
+    //logic of the login, check with database
     private void userLogin() {
 
         final String email = email_et.getText().toString().trim();
@@ -128,12 +99,50 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         });
 
     }
+
+    //regarding view
+    private void rotateAnimation() {
+
+        rotate_animation = AnimationUtils.loadAnimation(this, R.anim.rotate);
+        logo_iv.startAnimation(rotate_animation);
+    }
+
+    @Override
+    public void onClick(View v) {
+
+        switch (v.getId()) {
+
+            case R.id.login_btn:
+                userLogin();
+                break;
+            case R.id.register_tv:
+                switchToRegisterActivity();
+                break;
+            case R.id.logo_iv_login:
+                rotateAnimation();
+                break;
+
+        }
+
+
+    }
+
+
+
+    //move between activities
     private void switchToMainActivity() {
         Intent switchActivityIntent = new Intent(this, MainActivity.class);
         switchActivityIntent.putExtra("email", email_et.getText().toString());
         startActivity(switchActivityIntent);
     }
 
+    private void switchToRegisterActivity() {
+        Intent switchActivityIntent = new Intent(this, Register.class);
+        startActivity(switchActivityIntent);
+
+    }
+
+    //Ask for all the needed permissions for the app to run properly
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
