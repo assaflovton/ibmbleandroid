@@ -78,7 +78,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Byte msg_value = 0x13;//MSB is record mode and LSB is vibration strength
     private ArrayList<Float> data_y = new ArrayList<Float>();
     private ArrayList<Integer> data_x = new ArrayList<Integer>();
-    private boolean read1 = false, read2 = false, read3 = false, read4 = false, read5 = false, read6 = false, read7 = false, read8 = false;
+
+    private boolean read1 = false, read2 = false, read3 = false, read4 = false, read5 = false, read6 = false, read7 = false, read8 = false, read9 = false;
     private String curr_email;
     //-----------------------------------regarding preferences
     private boolean record = false;
@@ -295,6 +296,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         UUID data6UUID = new UUID(0x0000310600001000L, 0x800000805f9b34fbL);
         UUID data7UUID = new UUID(0x0000310700001000L, 0x800000805f9b34fbL);
         UUID data8UUID = new UUID(0x0000310800001000L, 0x800000805f9b34fbL);
+        UUID data9UUID = new UUID(0x0000310900001000L, 0x800000805f9b34fbL);
         // we send message of record mode and vibration mode
 
         // creates a queue of tasks to communicate
@@ -312,8 +314,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 BLEQueueItem thisTask = taskQ.poll();
                 if (thisTask != null) {
                     Log.i(tag, "processing " + thisTask.toString());
-                    switch (thisTask.getAction())
-                    {
+                    switch (thisTask.getAction()) {
                         case BLEQueueItem.READCHARACTERISTIC:
                             gatt.readCharacteristic((BluetoothGattCharacteristic) thisTask.getObject());
                             break;
@@ -387,7 +388,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                            Log.i(tag, "Descriptor UUID [" + scdesc.get(k).getUuid() + "]");
 //                            Log.i(tag, "Descriptor Permissions [" + scdesc.get(k).getPermissions() + "]");
 //                            Log.i(tag,"Attempting to read this Descriptor");
-                           //taskQ.add(new BLEQueueItem(BLEQueueItem.READDESCRIPTOR, scdesc.get(k).getUuid(), "Read Descriptor of Characteristic", scdesc.get(k)));
+                            //taskQ.add(new BLEQueueItem(BLEQueueItem.READDESCRIPTOR, scdesc.get(k).getUuid(), "Read Descriptor of Characteristic", scdesc.get(k)));
                         }
                     }
                 }
@@ -420,10 +421,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                         Log.i(tag, "value is [" + getBattery.getStringValue(0) + "]");
                         //battery = getBattery.getValue().toString();
-                       // taskQ.add(new BLEQueueItem(BLEQueueItem.READCHARACTERISTIC, getBattery.getUuid(), "Read battery", getBattery));
+                        // taskQ.add(new BLEQueueItem(BLEQueueItem.READCHARACTERISTIC, getBattery.getUuid(), "Read battery", getBattery));
                         if (record) {
                             BluetoothGattCharacteristic getData1 = ourBLEService.getCharacteristic(data1UUID);
-                           // taskQ.add(new BLEQueueItem(BLEQueueItem.RECORDING, getData1.getUuid(), "Read data1", getData1));
+                            // taskQ.add(new BLEQueueItem(BLEQueueItem.RECORDING, getData1.getUuid(), "Read data1", getData1));
                         }
 
                     }
@@ -460,17 +461,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     "onCharacteristicChanged " + characteristic.getUuid());
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.O)
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-            Log.i("hey" ,
-                    "hey");
             if (characteristic.getUuid().equals(batteryUUID)) {
-//
-//                try {
-//                    Thread.sleep(32000);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
+
                 if (characteristic.getValue() != null) {
                     Log.i(tag, "characteristic read [" + characteristic.getUuid() + "] [" + characteristic.getStringValue(0) + "]");
                     final int bat = characteristic.getValue()[0];
@@ -482,7 +477,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             battery_view.setText("Battery: " + String.valueOf(bat) + "%");
                         }
                     });
-                   //  wait for the data to be ready
+                    //  wait for the data to be ready
 
 
                 } else {
@@ -493,8 +488,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     doNextThing(gatt);
                 }
 
-            }
-            else if (characteristic.getUuid().equals(data1UUID) && !read1) { //read the data
+            } else if (characteristic.getUuid().equals(data1UUID) && !read1) { //read the data
 
                 for (int i = 0; i < 64; i++) { //read 64 pairs of float,unsigned long
                     Float ang_vel = new Float(ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
@@ -508,9 +502,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 BluetoothGattService ourBLEService = gatt.getService(serviceWeWant);
                 BluetoothGattCharacteristic getData2 = ourBLEService.getCharacteristic(data2UUID);
                 taskQ.add(new BLEQueueItem(BLEQueueItem.RECORDING, getData2.getUuid(), "Read data2", getData2));
-            }
-
-            else if (characteristic.getUuid().equals(data2UUID) && !read2) { //read the data
+            } else if (characteristic.getUuid().equals(data2UUID) && !read2) { //read the data
                 Log.i(tag, "started writing the data2" + characteristic.getValue().toString());
                 for (int i = 0; i < 64; i++) { //read 64 pairs of float,unsigned long
                     Float ang_vel = new Float(ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
@@ -525,8 +517,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 BluetoothGattCharacteristic getData3 = ourBLEService.getCharacteristic(data3UUID);
                 taskQ.add(new BLEQueueItem(BLEQueueItem.RECORDING, getData3.getUuid(), "Read data3", getData3));
 
-            }
-            else if (characteristic.getUuid().equals(data3UUID) && !read3) { //read the data
+            } else if (characteristic.getUuid().equals(data3UUID) && !read3) { //read the data
                 Log.i(tag, "started writing the data3" + characteristic.getValue().toString());
                 for (int i = 0; i < 64; i++) { //read 64 pairs of float,unsigned long
                     Float ang_vel = new Float(ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
@@ -541,8 +532,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 BluetoothGattCharacteristic getData4 = ourBLEService.getCharacteristic(data4UUID);
                 taskQ.add(new BLEQueueItem(BLEQueueItem.RECORDING, getData4.getUuid(), "Read data4", getData4));
 
-            }
-            else if (characteristic.getUuid().equals(data4UUID) && !read4) { //read the data
+            } else if (characteristic.getUuid().equals(data4UUID) && !read4) { //read the data
                 Log.i(tag, "started writing the data4" + characteristic.getValue().toString());
                 for (int i = 0; i < 64; i++) { //read 64 pairs of float,unsigned long
                     Float ang_vel = new Float(ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
@@ -557,8 +547,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 BluetoothGattCharacteristic getData5 = ourBLEService.getCharacteristic(data5UUID);
                 taskQ.add(new BLEQueueItem(BLEQueueItem.RECORDING, getData5.getUuid(), "Read data5", getData5));
 
-            }
-            else if (characteristic.getUuid().equals(data5UUID) && !read5) { //read the data
+            } else if (characteristic.getUuid().equals(data5UUID) && !read5) { //read the data
                 Log.i(tag, "started writing the data5" + characteristic.getValue().toString());
                 for (int i = 0; i < 64; i++) { //read 64 pairs of float,unsigned long
                     Float ang_vel = new Float(ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
@@ -573,8 +562,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 BluetoothGattCharacteristic getData6 = ourBLEService.getCharacteristic(data6UUID);
                 taskQ.add(new BLEQueueItem(BLEQueueItem.RECORDING, getData6.getUuid(), "Read data6", getData6));
 
-            }
-            else if (characteristic.getUuid().equals(data6UUID) && !read6) { //read the data
+            } else if (characteristic.getUuid().equals(data6UUID) && !read6) { //read the data
                 Log.i(tag, "started writing the data6" + characteristic.getValue().toString());
                 for (int i = 0; i < 64; i++) { //read 64 pairs of float,unsigned long
                     Float ang_vel = new Float(ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
@@ -589,8 +577,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 BluetoothGattCharacteristic getData7 = ourBLEService.getCharacteristic(data7UUID);
                 taskQ.add(new BLEQueueItem(BLEQueueItem.RECORDING, getData7.getUuid(), "Read data7", getData7));
 
-            }
-            else if (characteristic.getUuid().equals(data7UUID) && !read7) { //read the data
+            } else if (characteristic.getUuid().equals(data7UUID) && !read7) { //read the data
                 Log.i(tag, "started writing the data7" + characteristic.getValue().toString());
                 for (int i = 0; i < 64; i++) { //read 64 pairs of float,unsigned long
                     Float ang_vel = new Float(ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
@@ -605,8 +592,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 BluetoothGattCharacteristic getData8 = ourBLEService.getCharacteristic(data8UUID);
                 taskQ.add(new BLEQueueItem(BLEQueueItem.RECORDING, getData8.getUuid(), "Read data8", getData8));
 
-            }
-            else if (characteristic.getUuid().equals(data8UUID) && !read8) { //read the data
+            } else if (characteristic.getUuid().equals(data8UUID) && !read8) { //read the data
                 Log.i(tag, "started writing the data8" + characteristic.getValue().toString());
                 for (int i = 0; i < 64; i++) { //read 64 pairs of float,unsigned long
                     Float ang_vel = new Float(ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
@@ -618,13 +604,54 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 read8 = true;
                 BluetoothGattService ourBLEService = gatt.getService(serviceWeWant);
-                writeDataToFirebase(data_y, data_x);
+                BluetoothGattCharacteristic getData9 = ourBLEService.getCharacteristic(data8UUID);
+                taskQ.add(new BLEQueueItem(BLEQueueItem.RECORDING, getData9.getUuid(), "Read data9", getData9));
+            } else if (characteristic.getUuid().equals(data8UUID) && !read9) { //read the data
+                Log.i(tag, "started writing the data9" + characteristic.getValue().toString());
+                ArrayList<Float> hs = new ArrayList<Float>();
+                ArrayList<Integer> hs_time = new ArrayList<Integer>();
+                ArrayList<Float> ms = new ArrayList<Float>();
+                ArrayList<Integer> ms_time = new ArrayList<Integer>();
+                ArrayList<Float> to = new ArrayList<Float>();
+                ArrayList<Integer> to_time = new ArrayList<Integer>();
+
+                for (int i = 0; i < 20; i++) { //read 64 pairs of float,unsigned long
+                    Float hs_f = new Float(ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getFloat());
+                    hs.add(hs_f);
+                    Integer hs_time_i = new Integer(ByteBuffer.wrap(characteristic.getValue(), i * 8 + 4, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getInt());
+                    hs_time.add(hs_time_i);
+                    Float ms_f = new Float(ByteBuffer.wrap(characteristic.getValue(), 20 * 8 + i * 8, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getFloat());
+                    ms.add(ms_f);
+                    Integer ms_time_i = new Integer(ByteBuffer.wrap(characteristic.getValue(), 20 * 8 + i * 8 + 4, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getInt());
+                    ms_time.add(ms_time_i);
+                    Float to_f = new Float(ByteBuffer.wrap(characteristic.getValue(), 40 * 8 + i * 8, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getFloat());
+                    to.add(to_f);
+                    Integer to_time_i = new Integer(ByteBuffer.wrap(characteristic.getValue(), 40 * 8 + i * 8 + 4, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getInt());
+                    to_time.add(to_time_i);
+                }
+
+                read9 = true;
+                BluetoothGattService ourBLEService = gatt.getService(serviceWeWant);
+                writeDataToFirebase(new SampleData(data_x, data_y, ms_time, ms,
+                        hs_time, hs, to_time, to));
 
                 Log.i(tag, "data_y   :" + data_y.toString());
                 Log.i(tag, "data_x   :" + data_x.toString());
+                Log.i(tag, "data_hs   :" + hs.toString());
+                Log.i(tag, "data_hs_time   :" + hs_time.toString());
+                Log.i(tag, "data_ms   :" + ms.toString());
+                Log.i(tag, "data_ms_time   :" + ms_time.toString());
+                Log.i(tag, "data_to   :" + to.toString());
+                Log.i(tag, "data_to_time   :" + to_time.toString());
 
                 mHandler.sendEmptyMessage(DISCONNECTING);
-               // gatt.disconnect();
+                // gatt.disconnect();
             }
             doNextThing(gatt);
         }
@@ -706,7 +733,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    public void writeDataToFirebase(ArrayList<Float> y, ArrayList<Integer> x) {
+    public void writeDataToFirebase(SampleData sample) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -723,7 +750,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                         if (u.samples == null) {
                                             u.samples = new ArrayList<SampleData>();
                                         }
-                                        u.samples.add(new SampleData(data_x, data_y));
+                                        u.samples.add(sample);
                                         rootRef.child(snapshot.getKey()).setValue(u);
 
                                     }

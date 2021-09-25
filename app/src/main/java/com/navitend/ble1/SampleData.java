@@ -11,12 +11,24 @@ import java.util.Date;
 public class SampleData {
     public ArrayList<Float> data_y;
     public ArrayList<Integer> data_x;
+    public ArrayList<Float> ms;
+    public ArrayList<Integer> ms_time;
+    public ArrayList<Float> hs;
+    public ArrayList<Integer> hs_time;
+    public ArrayList<Float> to;
+    public ArrayList<Integer> to_time;
     public String date;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     public SampleData() {
         this.data_y = new ArrayList<Float>();
         this.data_x = new ArrayList<Integer>();
+        this.ms = new ArrayList<Float>();
+        this.ms_time = new ArrayList<Integer>();
+        this.hs = new ArrayList<Float>();
+        this.hs_time = new ArrayList<Integer>();
+        this.to = new ArrayList<Float>();
+        this.to_time = new ArrayList<Integer>();
         this.date =  LocalDateTime.now().toString();
     }
 
@@ -33,17 +45,74 @@ public class SampleData {
             this.data_x.add(i);
 
         }
+        this.ms = new ArrayList<Float>();
+        for (Float f:s.ms
+        ) {
+            this.ms.add(f);
+
+        }
+        this.ms_time = new ArrayList<Integer>();
+        for (Integer i:s.ms_time
+        ) {
+            this.ms_time.add(i);
+
+        }
+        this.hs = new ArrayList<Float>();
+        for (Float f:s.hs
+        ) {
+            this.hs.add(f);
+
+        }
+        this.hs_time = new ArrayList<Integer>();
+        for (Integer i:s.hs_time
+        ) {
+            this.hs_time.add(i);
+
+        }
+        this.to = new ArrayList<Float>();
+        for (Float f:s.to
+        ) {
+            this.to.add(f);
+
+        }
+        this.to_time = new ArrayList<Integer>();
+        for (Integer i:s.to_time
+        ) {
+            this.to_time.add(i);
+
+        }
         this.date =  s.date;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public SampleData(ArrayList<Integer> x, ArrayList<Float> y){
+    public SampleData(ArrayList<Integer> x, ArrayList<Float> y,
+                      ArrayList<Integer> ms_time_n, ArrayList<Float> ms_n,
+                      ArrayList<Integer> hs_time_n, ArrayList<Float> hs_n,
+                      ArrayList<Integer> to_time_n, ArrayList<Float> to_n){
         this.data_y = new ArrayList<Float>();
         this.data_x = new ArrayList<Integer>();
+        this.ms = new ArrayList<Float>();
+        this.ms_time = new ArrayList<Integer>();
+        this.hs = new ArrayList<Float>();
+        this.hs_time = new ArrayList<Integer>();
+        this.to = new ArrayList<Float>();
+        this.to_time = new ArrayList<Integer>();
         for (Integer i : x) {
             data_x.add(i); }
-        for (Float i : y) {
-            data_y.add(i); }
+        for (Float f : y) {
+            data_y.add(f); }
+        for (Integer i : ms_time_n) {
+            ms_time.add(i); }
+        for (Float f : ms_n) {
+            ms.add(f); }
+        for (Integer i : hs_time_n) {
+            hs_time.add(i); }
+        for (Float f : hs_n) {
+            hs.add(f); }
+        for (Integer i : to_time_n) {
+            to_time.add(i); }
+        for (Float f : to_n) {
+            to.add(f); }
         this.date =  new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z").format(Calendar.getInstance().getTime());
 
     }
