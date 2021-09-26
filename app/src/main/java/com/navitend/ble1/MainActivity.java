@@ -15,6 +15,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -65,6 +66,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView battery_view;
     private CheckBox test_cb;
     private TextView status_view;
+    private TextView timer_view;
     private ImageView logo;
     private String battery = "100";
     private NumberPicker vibration_picker;
@@ -73,12 +75,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Animation rotate_animation;
     //-----------------------------------regarding communication
     private final int NOTCONNECTED = 0, SEARCHING = 1, FOUND = 2, CONNECTED = 3, DISCOVERING = 4,
-            COMMUNICATING = 5, CONFIGURE = 6, DISCONNECTING = 7, INTERROGATE = 8, RECORDING = 9;
+            COMMUNICATING = 5, CONFIGURE = 6, DISCONNECTING = 7, INTERROGATE = 8, RECORDING = 9, PROCESSING =10;
     private BluetoothAdapter bluetoothAdapter;
     private Byte msg_value = 0x13;//MSB is record mode and LSB is vibration strength
     private ArrayList<Float> data_y = new ArrayList<Float>();
     private ArrayList<Integer> data_x = new ArrayList<Integer>();
-
+    private boolean first_time_record = true;
     private boolean read1 = false, read2 = false, read3 = false, read4 = false, read5 = false, read6 = false, read7 = false, read8 = false, read9 = false;
     private String curr_email;
     //-----------------------------------regarding preferences
@@ -98,6 +100,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         battery_view = findViewById(R.id.battery);
         logo = findViewById(R.id.logo_iv_main);
+        timer_view = findViewById(R.id.timer);
         logo.setOnClickListener(this);
         data_btn = findViewById(R.id.recorded_data_btn);
         data_btn.setOnClickListener(this);
@@ -145,7 +148,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         browser.loadUrl("javascript:setClassOnArduino('discovering');");
                         break;
                     case DISCOVERING:
+                        if(!first_time_record){
+                            browser.loadUrl("javascript:setStatus('Processing');");
+                        }else{
                         browser.loadUrl("javascript:setStatus('Discovering');");
+                        }
                         browser.loadUrl("javascript:setClassOnArduino('discovering');");
                         break;
                     case COMMUNICATING:
@@ -153,14 +160,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         browser.loadUrl("javascript:setClassOnArduino('communicating');");
                         break;
                     case RECORDING:
-                        browser.loadUrl("javascript:setStatus('Recording');");
+                        if(record && first_time_record){
+                            first_time_record = false;
+                            browser.loadUrl("javascript:setStatus('Recording');");
+                            reverseTimer(20, timer_view);
+                        }
                         browser.loadUrl("javascript:setClassOnArduino('recording');");
                         break;
                     case CONFIGURE:
                         browser.loadUrl("javascript:setActuating('communicating');");
                         break;
                     case DISCONNECTING:
-                        browser.loadUrl("javascript:setStatus('Disconnecting');");
+                        browser.loadUrl("javascript:setStatus('Finished');");
                         break;
                 }
             }
@@ -334,7 +345,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             gatt.disconnect();
                             break;
                         case BLEQueueItem.RECORDING:
-                            //Thread.sleep(5000); // wait for the data to be ready
+
                             gatt.readCharacteristic((BluetoothGattCharacteristic) thisTask.getObject());
                             break;
                     }
@@ -469,12 +480,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (characteristic.getValue() != null) {
                     Log.i(tag, "characteristic read [" + characteristic.getUuid() + "] [" + characteristic.getStringValue(0) + "]");
                     final int bat = characteristic.getValue()[0];
-                    Log.i(tag, "batty read " + characteristic.getValue().length + "value is" + bat);
+                    Log.i(tag, "batty read " + characteristic.getValue().length + "value is" + bat );
 
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            battery_view.setText("Battery: " + String.valueOf(bat) + "%");
+                            battery_view.setText("Battery: " + String.valueOf(bat) + "%                  ");
                         }
                     });
                     //  wait for the data to be ready
@@ -489,7 +500,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
 
             } else if (characteristic.getUuid().equals(data1UUID) && !read1) { //read the data
-
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 for (int i = 0; i < 64; i++) { //read 64 pairs of float,unsigned long
                     Float ang_vel = new Float(ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
                             (ByteOrder.LITTLE_ENDIAN).getFloat());
@@ -499,6 +514,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     data_x.add(time);
                 }
                 read1 = true;
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 BluetoothGattService ourBLEService = gatt.getService(serviceWeWant);
                 BluetoothGattCharacteristic getData2 = ourBLEService.getCharacteristic(data2UUID);
                 taskQ.add(new BLEQueueItem(BLEQueueItem.RECORDING, getData2.getUuid(), "Read data2", getData2));
@@ -518,7 +538,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 taskQ.add(new BLEQueueItem(BLEQueueItem.RECORDING, getData3.getUuid(), "Read data3", getData3));
 
             } else if (characteristic.getUuid().equals(data3UUID) && !read3) { //read the data
+
                 Log.i(tag, "started writing the data3" + characteristic.getValue().toString());
+
                 for (int i = 0; i < 64; i++) { //read 64 pairs of float,unsigned long
                     Float ang_vel = new Float(ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
                             (ByteOrder.LITTLE_ENDIAN).getFloat());
@@ -526,6 +548,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Integer time = new Integer(ByteBuffer.wrap(characteristic.getValue(), i * 8 + 4, 4).order
                             (ByteOrder.LITTLE_ENDIAN).getInt());
                     data_x.add(time);
+
                 }
                 read3 = true;
                 BluetoothGattService ourBLEService = gatt.getService(serviceWeWant);
@@ -604,9 +627,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 read8 = true;
                 BluetoothGattService ourBLEService = gatt.getService(serviceWeWant);
-                BluetoothGattCharacteristic getData9 = ourBLEService.getCharacteristic(data8UUID);
+                BluetoothGattCharacteristic getData9 = ourBLEService.getCharacteristic(data9UUID);
                 taskQ.add(new BLEQueueItem(BLEQueueItem.RECORDING, getData9.getUuid(), "Read data9", getData9));
-            } else if (characteristic.getUuid().equals(data8UUID) && !read9) { //read the data
+            } else if (characteristic.getUuid().equals(data9UUID) && !read9) { //read the data
                 Log.i(tag, "started writing the data9" + characteristic.getValue().toString());
                 ArrayList<Float> hs = new ArrayList<Float>();
                 ArrayList<Integer> hs_time = new ArrayList<Integer>();
@@ -614,26 +637,106 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 ArrayList<Integer> ms_time = new ArrayList<Integer>();
                 ArrayList<Float> to = new ArrayList<Float>();
                 ArrayList<Integer> to_time = new ArrayList<Integer>();
-
-                for (int i = 0; i < 20; i++) { //read 64 pairs of float,unsigned long
+                // read the hs ms to points data
+                for (int i = 0; i < 20; i++) { //read 20 pairs of float,unsigned long
                     Float hs_f = new Float(ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
                             (ByteOrder.LITTLE_ENDIAN).getFloat());
                     hs.add(hs_f);
+
                     Integer hs_time_i = new Integer(ByteBuffer.wrap(characteristic.getValue(), i * 8 + 4, 4).order
                             (ByteOrder.LITTLE_ENDIAN).getInt());
                     hs_time.add(hs_time_i);
+
                     Float ms_f = new Float(ByteBuffer.wrap(characteristic.getValue(), 20 * 8 + i * 8, 4).order
                             (ByteOrder.LITTLE_ENDIAN).getFloat());
                     ms.add(ms_f);
+
                     Integer ms_time_i = new Integer(ByteBuffer.wrap(characteristic.getValue(), 20 * 8 + i * 8 + 4, 4).order
                             (ByteOrder.LITTLE_ENDIAN).getInt());
                     ms_time.add(ms_time_i);
+
                     Float to_f = new Float(ByteBuffer.wrap(characteristic.getValue(), 40 * 8 + i * 8, 4).order
                             (ByteOrder.LITTLE_ENDIAN).getFloat());
                     to.add(to_f);
+
                     Integer to_time_i = new Integer(ByteBuffer.wrap(characteristic.getValue(), 40 * 8 + i * 8 + 4, 4).order
                             (ByteOrder.LITTLE_ENDIAN).getInt());
                     to_time.add(to_time_i);
+
+                }
+
+                Log.i(tag, "data_y   :" + data_y.toString());
+                Log.i(tag, "data_x   :" + data_x.toString());
+                Log.i(tag, "data_hs   :" + hs.toString());
+                Log.i(tag, "data_hs_time   :" + hs_time.toString());
+                Log.i(tag, "data_ms   :" + ms.toString());
+                Log.i(tag, "data_ms_time   :" + ms_time.toString());
+                Log.i(tag, "data_to   :" + to.toString());
+                Log.i(tag, "data_to_time   :" + to_time.toString());
+
+                //remove padding with zeros
+                int last_index_of_not_zero = 0, last_index_of_not_zero_ms = 0, last_index_of_not_zero_hs = 0, last_index_of_not_zero_to = 0;
+                int size_y = data_y.size(), size_ms = ms.size(), size_hs = hs.size(), size_to = to.size();
+                for (last_index_of_not_zero = size_y - 1; last_index_of_not_zero >= 0; last_index_of_not_zero--) {
+                    if (data_y.get(last_index_of_not_zero) != 0) {
+                        break;
+                    } else {
+                        data_y.remove(last_index_of_not_zero);
+                        data_x.remove(last_index_of_not_zero);
+                    }
+                }
+                for (last_index_of_not_zero_hs = size_hs - 1; last_index_of_not_zero_hs >= 0; last_index_of_not_zero_hs--) {
+                    if (hs.get(last_index_of_not_zero_hs) != 0) {
+                        break;
+                    } else {
+                        hs.remove(last_index_of_not_zero_hs);
+                        hs_time.remove(last_index_of_not_zero_hs);
+                    }
+                }
+                for (last_index_of_not_zero_ms = size_ms - 1; last_index_of_not_zero_ms >= 0; last_index_of_not_zero_ms--) {
+                    if (ms.get(last_index_of_not_zero_ms) != 0) {
+                        break;
+                    } else {
+                        ms.remove(last_index_of_not_zero_ms);
+                        ms_time.remove(last_index_of_not_zero_ms);
+                    }
+                }
+                for (last_index_of_not_zero_to = size_to - 1; last_index_of_not_zero_to >= 0; last_index_of_not_zero_to--) {
+                    if (to.get(last_index_of_not_zero_to) != 0) {
+                        break;
+                    } else {
+                        to.remove(last_index_of_not_zero_to);
+                        to_time.remove(last_index_of_not_zero_to);
+                    }
+                }
+
+
+                //scale back to zero the time
+                if (data_x.size() != 0) {
+                    Integer first = new Integer(data_x.get(0));
+                    for (int i = 0; i < data_x.size(); i++) {
+                        data_x.set(i, new Integer(data_x.get(i) - first));
+
+                    }
+                }
+                if (hs_time.size() != 0) {
+                    Integer first = new Integer(hs_time.get(0));
+                    for (int i = 0; i < hs_time.size(); i++) {
+                        hs_time.set(i, new Integer(hs_time.get(i) - first));
+                    }
+                }
+                if (ms_time.size() != 0) {
+                    Integer first = new Integer(ms_time.get(0));
+                    for (int i = 0; i < ms_time.size(); i++) {
+                        ms_time.set(i, new Integer(ms_time.get(i) - first));
+                    }
+                }
+
+                if (to_time.size() != 0) {
+                    Integer first = new Integer(to_time.get(0));
+                    for (int i = 0; i < to_time.size(); i++) {
+                        to_time.set(i, new Integer(to_time.get(i) - first));
+                    }
                 }
 
                 read9 = true;
@@ -807,6 +910,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void rotateAnimation() {
         rotate_animation = AnimationUtils.loadAnimation(this, R.anim.rotate);
         logo.startAnimation(rotate_animation);
+    }
+
+    public void reverseTimer(int Seconds,final TextView tv){
+
+        new CountDownTimer(Seconds* 1000+1000, 1000) {
+            public void onTick(long millisUntilFinished) {
+
+                int seconds = (int) (millisUntilFinished / 1000);
+                seconds = seconds % 60;
+                tv.setText("Test recording ends in: " + String.format("%02d", seconds));
+               tv.setVisibility(View.GONE);
+                tv.setVisibility(View.VISIBLE);
+            }
+
+            public void onFinish() {
+                tv.setText("When finished processing, you could\n" +
+                        "find results under Recorded data");
+                browser.loadUrl("javascript:setStatus('Processing');");
+            }
+        }.start();
     }
 
 }

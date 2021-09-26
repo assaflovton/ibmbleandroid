@@ -26,6 +26,7 @@
             style="@style/APDefacto.Dark"
             android:id="@+id/plot"
             android:layout_width="wrap_content"
+            android:layout_marginHorizontal="2dp"
             android:layout_height="200dp"
             android:layout_weight="20"
             ap:title="A Simple XY Plot"

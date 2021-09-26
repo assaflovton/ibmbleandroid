@@ -113,8 +113,8 @@ public class SampleData {
             to_time.add(i); }
         for (Float f : to_n) {
             to.add(f); }
-        this.date =  new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z").format(Calendar.getInstance().getTime());
-
+        String d =  new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z").format(Calendar.getInstance().getTime());
+        this.date = d.substring(0, d.length() - 6);
     }
 
     public String getDate() {

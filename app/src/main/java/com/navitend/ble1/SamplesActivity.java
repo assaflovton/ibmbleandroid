@@ -57,6 +57,7 @@ public class SamplesActivity extends AppCompatActivity {
     private HashMap<String, SampleData> samples;
     //private GraphView graph;
     private XYPlot plot;
+    private String selected;
 
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -67,67 +68,47 @@ public class SamplesActivity extends AppCompatActivity {
         samples_spinner = findViewById(R.id.spinner);
         Intent intent = getIntent();
         curr_email = intent.getStringExtra("email");
-        //im = findViewById(R.id.im);
         getSamplesData();
-//        graph = (GraphView) findViewById(R.id.graph);
-        // initialize our XYPlot reference:
-
         plot = (XYPlot) findViewById(R.id.plot);
-        //drawGraph();
-
+        plot.getGraph().setPaddingLeft(50);
+        plot.setDomainStep(StepMode.INCREMENT_BY_VAL, 2500);
+        plot.setVisibility(View.GONE);
+        plot.setVisibility(View.VISIBLE);
 
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
 
     public void drawGraph(String key) {
-        //get rid of zeros that we sent for padding
-        int last_index_of_not_zero = 0, last_index_of_not_zero_ms = 0, last_index_of_not_zero_hs = 0, last_index_of_not_zero_to = 0;
-        for (last_index_of_not_zero = samples.get(key).data_y.size() - 1; last_index_of_not_zero >= 0; last_index_of_not_zero--) {
-            if (samples.get(key).data_x.get(last_index_of_not_zero) != 0) {
-                break;
-            }
-        }
-        for (last_index_of_not_zero_ms = samples.get(key).ms.size() - 1; last_index_of_not_zero_ms >= 0; last_index_of_not_zero_ms--) {
-            if (samples.get(key).ms.get(last_index_of_not_zero_ms) != 0) {
-                break;
-            }
-        }
-        for (last_index_of_not_zero_to = samples.get(key).to.size() - 1; last_index_of_not_zero_to >= 0; last_index_of_not_zero_to--) {
-            if (samples.get(key).to.get(last_index_of_not_zero_to) != 0) {
-                break;
-            }
-        }
-        for (last_index_of_not_zero_hs = samples.get(key).hs.size() - 1; last_index_of_not_zero_hs >= 0; last_index_of_not_zero_hs--) {
-            if (samples.get(key).hs.get(last_index_of_not_zero_hs) != 0) {
-                break;
-            }
-        }
 
-        Number[] seriesNumbers = new Number[last_index_of_not_zero * 2];
-        Number[] seriesNumbersHS = new Number[last_index_of_not_zero_hs * 2];
-        Number[] seriesNumbersMS = new Number[last_index_of_not_zero_ms * 2];
-        Number[] seriesNumbersTO = new Number[last_index_of_not_zero_to * 2];
+        Number[] seriesNumbers = new Number[samples.get(key).data_x.size() * 2];
+        Number[] seriesNumbersHS = new Number[samples.get(key).hs.size() * 2];
+        Number[] seriesNumbersMS = new Number[samples.get(key).ms.size() * 2];
+        Number[] seriesNumbersTO = new Number[samples.get(key).to.size() * 2];
 
-        for (int i = 0; i < last_index_of_not_zero * 2; i += 2) {
+        //make an interleaved list of the data [x1,y1,x2,y2....]
+        for (int i = 0; i < samples.get(key).data_x.size() * 2; i += 2) {
             seriesNumbers[i] = (Number) (samples.get(key).data_x.get(i / 2) - samples.get(key).data_x.get(0));
             seriesNumbers[i + 1] = (Number) samples.get(key).data_y.get(i / 2);
         }
-        for (int i = 0; i < last_index_of_not_zero_ms * 2; i += 2) {
+
+        for (int i = 0; i < samples.get(key).ms.size() * 2; i += 2) {
             seriesNumbersMS[i] = (Number) (samples.get(key).ms_time.get(i / 2) - samples.get(key).ms_time.get(0));
-            seriesNumbers[i + 1] = (Number) samples.get(key).ms.get(i / 2);
+            seriesNumbersMS[i + 1] = (Number) samples.get(key).ms.get(i / 2);
+            Log.i("BLA", seriesNumbersMS[i] + " : " + seriesNumbers[i + 1]);
         }
-        for (int i = 0; i < last_index_of_not_zero_hs * 2; i += 2) {
+
+        for (int i = 0; i < samples.get(key).hs.size() * 2; i += 2) {
             seriesNumbersHS[i] = (Number) (samples.get(key).hs_time.get(i / 2) - samples.get(key).hs_time.get(0));
             seriesNumbersHS[i + 1] = (Number) samples.get(key).hs.get(i / 2);
         }
-        for (int i = 0; i < last_index_of_not_zero_to * 2; i += 2) {
+        for (int i = 0; i < samples.get(key).to.size() * 2; i += 2) {
             seriesNumbersTO[i] = (Number) (samples.get(key).to_time.get(i / 2) - samples.get(key).to_time.get(0));
             seriesNumbersTO[i + 1] = (Number) samples.get(key).to.get(i / 2);
         }
 
         XYSeries series = new SimpleXYSeries(
-                Arrays.asList(seriesNumbers), SimpleXYSeries.ArrayFormat.XY_VALS_INTERLEAVED, "Recorded data");
+                Arrays.asList(seriesNumbers), SimpleXYSeries.ArrayFormat.XY_VALS_INTERLEAVED, "Data");
         XYSeries seriesHS = new SimpleXYSeries(
                 Arrays.asList(seriesNumbersHS), SimpleXYSeries.ArrayFormat.XY_VALS_INTERLEAVED, "HS");
         XYSeries seriesMS = new SimpleXYSeries(
@@ -147,21 +128,21 @@ public class SamplesActivity extends AppCompatActivity {
                 new LineAndPointFormatter(this, R.xml.line_point_formatter_with_labels_to);
 
 
-        seriesFormat.setInterpolationParams(new CatmullRomInterpolator.Params(10,
-                CatmullRomInterpolator.Type.Centripetal));
-        seriesFormatHS.setInterpolationParams(new CatmullRomInterpolator.Params(10,
-                CatmullRomInterpolator.Type.Centripetal));
-        seriesFormatMS.setInterpolationParams(new CatmullRomInterpolator.Params(10,
-                CatmullRomInterpolator.Type.Centripetal));
-        seriesFormatTO.setInterpolationParams(new CatmullRomInterpolator.Params(10,
-                CatmullRomInterpolator.Type.Centripetal));
+        plot.clear();
+
+        plot.setTitle(samples.get(key).date);
+        plot.setRangeLabel("angular velocity [deg\\s]");
+        plot.setDomainLabel("time [ms]");
 
         plot.addSeries(series, seriesFormat);
+
         plot.addSeries(seriesHS, seriesFormatHS);
-        plot.addSeries(seriesMS, seriesFormatMS);
+
         plot.addSeries(seriesTO, seriesFormatTO);
+        plot.addSeries(seriesMS, seriesFormatMS);
 
     }
+
 
     public void getSamplesData() {
         runOnUiThread(new Runnable() {
@@ -183,7 +164,7 @@ public class SamplesActivity extends AppCompatActivity {
 
                                                 samples = new HashMap<String, SampleData>();
                                                 for (SampleData s : u.samples) {
-                                                    samples.put(s.getDate().substring(0, s.getDate().length() - 6), s);
+                                                    samples.put(s.getDate(), s);
                                                 }
                                                 samples_dates = new ArrayList<String>(samples.keySet());
 
@@ -197,12 +178,17 @@ public class SamplesActivity extends AppCompatActivity {
                                                             public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
 
                                                                 Object item = parent.getItemAtPosition(pos);
-                                                                Log.i("hey", item.toString());     //prints the text in spinner item.
+                                                                Log.i("Graph", item.toString());     //prints the text in spinner item.
                                                                 //drawGraph(item.toString());
+                                                                Log.i("Graph", "starting to draw graph");
+
+
                                                                 drawGraph(item.toString());
                                                                 plot.setVisibility(View.GONE);
+
                                                                 plot.setVisibility(View.VISIBLE);
-                                                                Log.i("hey", "starting to draw graph");
+
+
                                                             }
 
                                                             public void onNothingSelected(AdapterView<?> parent) {
