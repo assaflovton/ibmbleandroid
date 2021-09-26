@@ -34,32 +34,32 @@ import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.NumberPicker;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.UUID;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     //-------------------------------------regarding debugging
-    private final String tag = "We said that: ";
+    private final String tag = "Main activity: ";
     //------------------------------------regarding view
     private WebView browser = null;
     private Handler mHandler = null;
@@ -68,19 +68,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView status_view;
     private TextView timer_view;
     private ImageView logo;
-    private String battery = "100";
     private NumberPicker vibration_picker;
-    private String name = "";
     private Button data_btn;
     Animation rotate_animation;
     //-----------------------------------regarding communication
-    private final int NOTCONNECTED = 0, SEARCHING = 1, FOUND = 2, CONNECTED = 3, DISCOVERING = 4,
-            COMMUNICATING = 5, CONFIGURE = 6, DISCONNECTING = 7, INTERROGATE = 8, RECORDING = 9, PROCESSING =10;
+    private final int DISCONNECTED = 0, SEARCHING = 1, FOUND = 2, CONNECTED = 3, DISCOVERING = 4,
+            COMMUNICATING = 5, CONFIGURE = 6, DISCONNECTING = 7, INTERROGATE = 8, RECORDING = 9;
     private BluetoothAdapter bluetoothAdapter;
     private Byte msg_value = 0x13;//MSB is record mode and LSB is vibration strength
-    private ArrayList<Float> data_y = new ArrayList<Float>();
-    private ArrayList<Integer> data_x = new ArrayList<Integer>();
+    private ArrayList<Float> data_y = new ArrayList<>();
+    private ArrayList<Integer> data_x = new ArrayList<>();
     private boolean first_time_record = true;
+    /*
+     *there is a disconnection every time when recording, we don't want the user to think the connection
+     * is lost... this boolean is set to false after the first disconnection so we would know not to update
+     * the ui to disconnected
+     * */
     private boolean read1 = false, read2 = false, read3 = false, read4 = false, read5 = false, read6 = false, read7 = false, read8 = false, read9 = false;
     private String curr_email;
     //-----------------------------------regarding preferences
@@ -114,11 +117,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         vibration_picker.setDisplayedValues(vibration_modes);
         vibration_picker.setMaxValue(3);
         vibration_picker.setMinValue(0);
-        vibration_picker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-            @Override
-            public void onValueChange(NumberPicker numberPicker, int oldVal, int newVal) {
-
-            }
+        vibration_picker.setOnValueChangedListener((numberPicker, oldVal, newVal) -> {
         });
         //logo spin
         rotateAnimation();
@@ -131,7 +130,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mHandler = new Handler(Looper.getMainLooper()) {
             public void handleMessage(Message inputMessage) {
                 switch (inputMessage.what) {
-                    case NOTCONNECTED:
+                    case DISCONNECTED:
                         browser.loadUrl("javascript:setStatus('Not Connected');");
                         browser.loadUrl("javascript:setClassOnArduino('notconnected');");
                         browser.loadUrl("javascript:setActuating('notconnected');");
@@ -148,10 +147,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         browser.loadUrl("javascript:setClassOnArduino('discovering');");
                         break;
                     case DISCOVERING:
-                        if(!first_time_record){
+                        if (!first_time_record) {
                             browser.loadUrl("javascript:setStatus('Processing');");
-                        }else{
-                        browser.loadUrl("javascript:setStatus('Discovering');");
+                        } else {
+                            browser.loadUrl("javascript:setStatus('Discovering');");
                         }
                         browser.loadUrl("javascript:setClassOnArduino('discovering');");
                         break;
@@ -160,7 +159,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         browser.loadUrl("javascript:setClassOnArduino('communicating');");
                         break;
                     case RECORDING:
-                        if(record && first_time_record){
+                        if (record && first_time_record) {
                             first_time_record = false;
                             browser.loadUrl("javascript:setStatus('Recording');");
                             reverseTimer(20, timer_view);
@@ -177,11 +176,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         };
         //the connect button
-        browser = (WebView) this.findViewById(R.id.browser);
-        browser.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-            }
+        browser = this.findViewById(R.id.browser);
+        browser.setOnClickListener(view -> {
         });
         // set a webview client to override the default functionality
         browser.setWebViewClient(new wvClient());
@@ -311,7 +307,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // we send message of record mode and vibration mode
 
         // creates a queue of tasks to communicate
-        Queue<BLEQueueItem> taskQ = new LinkedList<BLEQueueItem>();
+        Queue<BLEQueueItem> taskQ = new LinkedList<>();
         private int mode = INTERROGATE;
 
         BLERemoteDevice(int mode) {
@@ -345,7 +341,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             gatt.disconnect();
                             break;
                         case BLEQueueItem.RECORDING:
-
                             gatt.readCharacteristic((BluetoothGattCharacteristic) thisTask.getObject());
                             break;
                     }
@@ -366,7 +361,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     mHandler.sendEmptyMessage(DISCOVERING);
                     gatt.discoverServices();
                 } else if (status == BluetoothGatt.STATE_DISCONNECTED) {
-                    mHandler.sendEmptyMessage((NOTCONNECTED));
+                    mHandler.sendEmptyMessage((DISCONNECTED));
                 }
             }
         }
@@ -376,9 +371,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Log.i(tag, "OnServiceDiscovered [" + status + "] " + gatt.toString());
             if (mode == INTERROGATE) {
                 List<BluetoothGattService> services = gatt.getServices();
-                //int size = services.size();
-                //Log.i(tag,"here is the size"+size );
-
                 for (int i = 0; i < services.size(); i++) {
                     Log.i(tag, "service [" + i + "] is [" + services.get(i).getUuid().toString() + "]");
                     if (serviceWeWant.equals(services.get(i).getUuid())) {
@@ -394,13 +386,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             Log.i(tag, "This Characteristic cannot be Read");
                         }
                         List<BluetoothGattDescriptor> scdesc = schars.get(j).getDescriptors();
-                        for (int k = 0; k < scdesc.size(); k++) {
-//                            Log.i(tag, "Descriptor [" + k + "] [" + scdesc.get(k).toString() + "]");
-//                            Log.i(tag, "Descriptor UUID [" + scdesc.get(k).getUuid() + "]");
-//                            Log.i(tag, "Descriptor Permissions [" + scdesc.get(k).getPermissions() + "]");
-//                            Log.i(tag,"Attempting to read this Descriptor");
-                            //taskQ.add(new BLEQueueItem(BLEQueueItem.READDESCRIPTOR, scdesc.get(k).getUuid(), "Read Descriptor of Characteristic", scdesc.get(k)));
-                        }
                     }
                 }
             }
@@ -426,29 +411,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     } else {
                         Log.i(tag, "No button");
                     }
-
                     BluetoothGattCharacteristic getBattery = ourBLEService.getCharacteristic(batteryUUID);
                     if (getBattery != null) {
-
                         Log.i(tag, "value is [" + getBattery.getStringValue(0) + "]");
-                        //battery = getBattery.getValue().toString();
-                        // taskQ.add(new BLEQueueItem(BLEQueueItem.READCHARACTERISTIC, getBattery.getUuid(), "Read battery", getBattery));
                         if (record) {
                             BluetoothGattCharacteristic getData1 = ourBLEService.getCharacteristic(data1UUID);
-                            // taskQ.add(new BLEQueueItem(BLEQueueItem.RECORDING, getData1.getUuid(), "Read data1", getData1));
                         }
-
                     }
-                    Log.i(tag, "OK, let's go^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-                    //taskQ.add(new BLEQueueItem(BLEQueueItem.DISCONNECT, new UUID(0, 0), "Disconnect", null));
-
+                    Log.i(tag, "OK, let's go");
                     if (record) {
                         mHandler.sendEmptyMessage(RECORDING);
-
                     } else {
                         mHandler.sendEmptyMessage(COMMUNICATING);
                     }
-
                 }
             }
             doNextThing(gatt);
@@ -480,7 +455,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (characteristic.getValue() != null) {
                     Log.i(tag, "characteristic read [" + characteristic.getUuid() + "] [" + characteristic.getStringValue(0) + "]");
                     final int bat = characteristic.getValue()[0];
-                    Log.i(tag, "batty read " + characteristic.getValue().length + "value is" + bat );
+                    Log.i(tag, "batty read " + characteristic.getValue().length + "value is" + bat);
 
                     runOnUiThread(new Runnable() {
                         @Override
@@ -506,10 +481,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     e.printStackTrace();
                 }
                 for (int i = 0; i < 64; i++) { //read 64 pairs of float,unsigned long
-                    Float ang_vel = new Float(ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
+                    Float ang_vel = Float.valueOf(ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
                             (ByteOrder.LITTLE_ENDIAN).getFloat());
                     data_y.add(ang_vel);
-                    Integer time = new Integer(ByteBuffer.wrap(characteristic.getValue(), i * 8 + 4, 4).order
+                    Integer time = Integer.valueOf(ByteBuffer.wrap(characteristic.getValue(), i * 8 + 4, 4).order
                             (ByteOrder.LITTLE_ENDIAN).getInt());
                     data_x.add(time);
                 }
@@ -525,11 +500,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             } else if (characteristic.getUuid().equals(data2UUID) && !read2) { //read the data
                 Log.i(tag, "started writing the data2" + characteristic.getValue().toString());
                 for (int i = 0; i < 64; i++) { //read 64 pairs of float,unsigned long
-                    Float ang_vel = new Float(ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
-                            (ByteOrder.LITTLE_ENDIAN).getFloat());
+                    Float ang_vel = ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getFloat();
                     data_y.add(ang_vel);
-                    Integer time = new Integer(ByteBuffer.wrap(characteristic.getValue(), i * 8 + 4, 4).order
-                            (ByteOrder.LITTLE_ENDIAN).getInt());
+                    Integer time = ByteBuffer.wrap(characteristic.getValue(), i * 8 + 4, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getInt();
                     data_x.add(time);
                 }
                 read2 = true;
@@ -542,11 +517,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Log.i(tag, "started writing the data3" + characteristic.getValue().toString());
 
                 for (int i = 0; i < 64; i++) { //read 64 pairs of float,unsigned long
-                    Float ang_vel = new Float(ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
-                            (ByteOrder.LITTLE_ENDIAN).getFloat());
+                    Float ang_vel = ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getFloat();
                     data_y.add(ang_vel);
-                    Integer time = new Integer(ByteBuffer.wrap(characteristic.getValue(), i * 8 + 4, 4).order
-                            (ByteOrder.LITTLE_ENDIAN).getInt());
+                    Integer time = ByteBuffer.wrap(characteristic.getValue(), i * 8 + 4, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getInt();
                     data_x.add(time);
 
                 }
@@ -558,11 +533,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             } else if (characteristic.getUuid().equals(data4UUID) && !read4) { //read the data
                 Log.i(tag, "started writing the data4" + characteristic.getValue().toString());
                 for (int i = 0; i < 64; i++) { //read 64 pairs of float,unsigned long
-                    Float ang_vel = new Float(ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
-                            (ByteOrder.LITTLE_ENDIAN).getFloat());
+                    Float ang_vel = ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getFloat();
                     data_y.add(ang_vel);
-                    Integer time = new Integer(ByteBuffer.wrap(characteristic.getValue(), i * 8 + 4, 4).order
-                            (ByteOrder.LITTLE_ENDIAN).getInt());
+                    Integer time = ByteBuffer.wrap(characteristic.getValue(), i * 8 + 4, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getInt();
                     data_x.add(time);
                 }
                 read4 = true;
@@ -573,11 +548,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             } else if (characteristic.getUuid().equals(data5UUID) && !read5) { //read the data
                 Log.i(tag, "started writing the data5" + characteristic.getValue().toString());
                 for (int i = 0; i < 64; i++) { //read 64 pairs of float,unsigned long
-                    Float ang_vel = new Float(ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
-                            (ByteOrder.LITTLE_ENDIAN).getFloat());
+                    Float ang_vel = ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getFloat();
                     data_y.add(ang_vel);
-                    Integer time = new Integer(ByteBuffer.wrap(characteristic.getValue(), i * 8 + 4, 4).order
-                            (ByteOrder.LITTLE_ENDIAN).getInt());
+                    Integer time = ByteBuffer.wrap(characteristic.getValue(), i * 8 + 4, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getInt();
                     data_x.add(time);
                 }
                 read5 = true;
@@ -588,11 +563,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             } else if (characteristic.getUuid().equals(data6UUID) && !read6) { //read the data
                 Log.i(tag, "started writing the data6" + characteristic.getValue().toString());
                 for (int i = 0; i < 64; i++) { //read 64 pairs of float,unsigned long
-                    Float ang_vel = new Float(ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
-                            (ByteOrder.LITTLE_ENDIAN).getFloat());
+                    Float ang_vel = ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getFloat();
                     data_y.add(ang_vel);
-                    Integer time = new Integer(ByteBuffer.wrap(characteristic.getValue(), i * 8 + 4, 4).order
-                            (ByteOrder.LITTLE_ENDIAN).getInt());
+                    Integer time = ByteBuffer.wrap(characteristic.getValue(), i * 8 + 4, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getInt();
                     data_x.add(time);
                 }
                 read6 = true;
@@ -603,11 +578,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             } else if (characteristic.getUuid().equals(data7UUID) && !read7) { //read the data
                 Log.i(tag, "started writing the data7" + characteristic.getValue().toString());
                 for (int i = 0; i < 64; i++) { //read 64 pairs of float,unsigned long
-                    Float ang_vel = new Float(ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
-                            (ByteOrder.LITTLE_ENDIAN).getFloat());
+                    Float ang_vel = ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getFloat();
                     data_y.add(ang_vel);
-                    Integer time = new Integer(ByteBuffer.wrap(characteristic.getValue(), i * 8 + 4, 4).order
-                            (ByteOrder.LITTLE_ENDIAN).getInt());
+                    Integer time = ByteBuffer.wrap(characteristic.getValue(), i * 8 + 4, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getInt();
                     data_x.add(time);
                 }
                 read7 = true;
@@ -618,11 +593,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             } else if (characteristic.getUuid().equals(data8UUID) && !read8) { //read the data
                 Log.i(tag, "started writing the data8" + characteristic.getValue().toString());
                 for (int i = 0; i < 64; i++) { //read 64 pairs of float,unsigned long
-                    Float ang_vel = new Float(ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
-                            (ByteOrder.LITTLE_ENDIAN).getFloat());
+                    Float ang_vel = ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getFloat();
                     data_y.add(ang_vel);
-                    Integer time = new Integer(ByteBuffer.wrap(characteristic.getValue(), i * 8 + 4, 4).order
-                            (ByteOrder.LITTLE_ENDIAN).getInt());
+                    Integer time = ByteBuffer.wrap(characteristic.getValue(), i * 8 + 4, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getInt();
                     data_x.add(time);
                 }
                 read8 = true;
@@ -631,36 +606,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 taskQ.add(new BLEQueueItem(BLEQueueItem.RECORDING, getData9.getUuid(), "Read data9", getData9));
             } else if (characteristic.getUuid().equals(data9UUID) && !read9) { //read the data
                 Log.i(tag, "started writing the data9" + characteristic.getValue().toString());
-                ArrayList<Float> hs = new ArrayList<Float>();
-                ArrayList<Integer> hs_time = new ArrayList<Integer>();
-                ArrayList<Float> ms = new ArrayList<Float>();
-                ArrayList<Integer> ms_time = new ArrayList<Integer>();
-                ArrayList<Float> to = new ArrayList<Float>();
-                ArrayList<Integer> to_time = new ArrayList<Integer>();
+                ArrayList<Float> hs = new ArrayList<>();
+                ArrayList<Integer> hs_time = new ArrayList<>();
+                ArrayList<Float> ms = new ArrayList<>();
+                ArrayList<Integer> ms_time = new ArrayList<>();
+                ArrayList<Float> to = new ArrayList<>();
+                ArrayList<Integer> to_time = new ArrayList<>();
                 // read the hs ms to points data
                 for (int i = 0; i < 20; i++) { //read 20 pairs of float,unsigned long
-                    Float hs_f = new Float(ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
-                            (ByteOrder.LITTLE_ENDIAN).getFloat());
+                    Float hs_f = ByteBuffer.wrap(characteristic.getValue(), i * 8, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getFloat();
                     hs.add(hs_f);
 
-                    Integer hs_time_i = new Integer(ByteBuffer.wrap(characteristic.getValue(), i * 8 + 4, 4).order
-                            (ByteOrder.LITTLE_ENDIAN).getInt());
+                    Integer hs_time_i = ByteBuffer.wrap(characteristic.getValue(), i * 8 + 4, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getInt();
                     hs_time.add(hs_time_i);
 
-                    Float ms_f = new Float(ByteBuffer.wrap(characteristic.getValue(), 20 * 8 + i * 8, 4).order
-                            (ByteOrder.LITTLE_ENDIAN).getFloat());
+                    Float ms_f = ByteBuffer.wrap(characteristic.getValue(), 20 * 8 + i * 8, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getFloat();
                     ms.add(ms_f);
 
-                    Integer ms_time_i = new Integer(ByteBuffer.wrap(characteristic.getValue(), 20 * 8 + i * 8 + 4, 4).order
-                            (ByteOrder.LITTLE_ENDIAN).getInt());
+                    Integer ms_time_i = ByteBuffer.wrap(characteristic.getValue(), 20 * 8 + i * 8 + 4, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getInt();
                     ms_time.add(ms_time_i);
 
-                    Float to_f = new Float(ByteBuffer.wrap(characteristic.getValue(), 40 * 8 + i * 8, 4).order
-                            (ByteOrder.LITTLE_ENDIAN).getFloat());
+                    Float to_f = ByteBuffer.wrap(characteristic.getValue(), 40 * 8 + i * 8, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getFloat();
                     to.add(to_f);
 
-                    Integer to_time_i = new Integer(ByteBuffer.wrap(characteristic.getValue(), 40 * 8 + i * 8 + 4, 4).order
-                            (ByteOrder.LITTLE_ENDIAN).getInt());
+                    Integer to_time_i = ByteBuffer.wrap(characteristic.getValue(), 40 * 8 + i * 8 + 4, 4).order
+                            (ByteOrder.LITTLE_ENDIAN).getInt();
                     to_time.add(to_time_i);
 
                 }
@@ -675,7 +650,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Log.i(tag, "data_to_time   :" + to_time.toString());
 
                 //remove padding with zeros
-                int last_index_of_not_zero = 0, last_index_of_not_zero_ms = 0, last_index_of_not_zero_hs = 0, last_index_of_not_zero_to = 0;
+                int last_index_of_not_zero, last_index_of_not_zero_ms, last_index_of_not_zero_hs, last_index_of_not_zero_to;
                 int size_y = data_y.size(), size_ms = ms.size(), size_hs = hs.size(), size_to = to.size();
                 for (last_index_of_not_zero = size_y - 1; last_index_of_not_zero >= 0; last_index_of_not_zero--) {
                     if (data_y.get(last_index_of_not_zero) != 0) {
@@ -713,29 +688,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 //scale back to zero the time
                 if (data_x.size() != 0) {
-                    Integer first = new Integer(data_x.get(0));
+                    Integer first = data_x.get(0);
                     for (int i = 0; i < data_x.size(); i++) {
-                        data_x.set(i, new Integer(data_x.get(i) - first));
+                        data_x.set(i, data_x.get(i) - first);
 
                     }
                 }
                 if (hs_time.size() != 0) {
-                    Integer first = new Integer(hs_time.get(0));
+                    Integer first = hs_time.get(0);
                     for (int i = 0; i < hs_time.size(); i++) {
-                        hs_time.set(i, new Integer(hs_time.get(i) - first));
+                        hs_time.set(i, hs_time.get(i) - first);
                     }
                 }
                 if (ms_time.size() != 0) {
-                    Integer first = new Integer(ms_time.get(0));
+                    Integer first = ms_time.get(0);
                     for (int i = 0; i < ms_time.size(); i++) {
-                        ms_time.set(i, new Integer(ms_time.get(i) - first));
+                        ms_time.set(i, ms_time.get(i) - first);
                     }
                 }
 
                 if (to_time.size() != 0) {
-                    Integer first = new Integer(to_time.get(0));
+                    Integer first = to_time.get(0);
                     for (int i = 0; i < to_time.size(); i++) {
-                        to_time.set(i, new Integer(to_time.get(i) - first));
+                        to_time.set(i, to_time.get(i) - first);
                     }
                 }
 
@@ -765,10 +740,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             try {
                 Log.i(tag, "onDescriptorRead status is [" + status + "]");
                 Log.i(tag, "descriptor read [" + descriptor.getCharacteristic().getUuid() + "]");
-                Log.i(tag, "descriptor value is [" + new String(descriptor.getValue(), "UTF-8") + "]");
+                Log.i(tag, "descriptor value is [" + new String(descriptor.getValue(), StandardCharsets.UTF_8) + "]");
                 doNextThing(gatt);
             } catch (Exception e) {
-                Log.e(tag, "Error reading descriptor " + e.getStackTrace());
+                Log.e(tag, "Error reading descriptor " + Arrays.toString(e.getStackTrace()));
                 doNextThing(gatt);
             }
         }
@@ -806,6 +781,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             ParcelUuid thisone = solicitationInfo.get(i);
                             Log.i(tag, "solicitationinfo [" + i + "] uuid [" + thisone.getUuid() + "]");
                         }
+                        assert remoteDevice != null;
                         ParcelUuid[] services = remoteDevice.getUuids();
                         if (services != null) {
                             Log.i(tag, "length of services is [" + services.length + "]");
@@ -837,72 +813,62 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void writeDataToFirebase(SampleData sample) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference().child("Users");
-                rootRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @RequiresApi(api = Build.VERSION_CODES.O)
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot Snapshot) {
-                        for (DataSnapshot snapshot : Snapshot.getChildren()) {
-                            if (snapshot.exists()) {
-                                if (snapshot.getValue(User.class) != null && snapshot.getValue(User.class).email != null) {
-                                    if (snapshot.getValue(User.class).email.equals(curr_email)) {
-                                        User u = snapshot.getValue(User.class);
-                                        if (u.samples == null) {
-                                            u.samples = new ArrayList<SampleData>();
-                                        }
-                                        u.samples.add(sample);
-                                        rootRef.child(snapshot.getKey()).setValue(u);
-
+        runOnUiThread(() -> {
+            DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference().child("Users");
+            rootRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @RequiresApi(api = Build.VERSION_CODES.O)
+                @Override
+                public void onDataChange(@NonNull DataSnapshot Snapshot) {
+                    for (DataSnapshot snapshot : Snapshot.getChildren()) {
+                        if (snapshot.exists()) {
+                            if (snapshot.getValue(User.class) != null && Objects.requireNonNull(snapshot.getValue(User.class)).email != null) {
+                                if (Objects.requireNonNull(snapshot.getValue(User.class)).email.equals(curr_email)) {
+                                    User u = snapshot.getValue(User.class);
+                                    assert u != null;
+                                    if (u.samples == null) {
+                                        u.samples = new ArrayList<>();
                                     }
+                                    u.samples.add(sample);
+                                    rootRef.child(Objects.requireNonNull(snapshot.getKey())).setValue(u);
+
                                 }
                             }
                         }
                     }
+                }
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                    }
-                });
-            }
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                }
+            });
         });
 
     }
 
     // get the current logged in user name and update the greeting in the main screen
     public void getUserNameAndGreet() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference().child("Users");
-                rootRef.addValueEventListener(new ValueEventListener() {
-                    @RequiresApi(api = Build.VERSION_CODES.O)
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot Snapshot) {
-                        for (DataSnapshot snapshot : Snapshot.getChildren()) {
-                            if (snapshot.exists()) {
-                                if (snapshot.getValue(User.class) != null && snapshot.getValue(User.class).email != null) {
-                                    if (snapshot.getValue(User.class).email.equals(curr_email)) {
-                                        User u = snapshot.getValue(User.class);
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                status_view.setText("Welcome back, " + u.name.substring(0, 1).toUpperCase() + u.name.substring(1).toLowerCase());
-                                            }
-                                        });
-                                    }
+        runOnUiThread(() -> {
+            DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference().child("Users");
+            rootRef.addValueEventListener(new ValueEventListener() {
+                @RequiresApi(api = Build.VERSION_CODES.O)
+                @Override
+                public void onDataChange(@NonNull DataSnapshot Snapshot) {
+                    for (DataSnapshot snapshot : Snapshot.getChildren()) {
+                        if (snapshot.exists()) {
+                            if (snapshot.getValue(User.class) != null && Objects.requireNonNull(snapshot.getValue(User.class)).email != null) {
+                                if (Objects.requireNonNull(snapshot.getValue(User.class)).email.equals(curr_email)) {
+                                    User u = snapshot.getValue(User.class);
+                                    runOnUiThread(() -> status_view.setText("Welcome back, " + u.name.substring(0, 1).toUpperCase() + u.name.substring(1).toLowerCase()));
                                 }
                             }
                         }
                     }
+                }
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                    }
-                });
-            }
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                }
+            });
         });
     }
 
@@ -912,21 +878,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         logo.startAnimation(rotate_animation);
     }
 
-    public void reverseTimer(int Seconds,final TextView tv){
+    public void reverseTimer(int Seconds, final TextView tv) {
 
-        new CountDownTimer(Seconds* 1000+1000, 1000) {
+        new CountDownTimer(Seconds * 1000 , 1000) {
             public void onTick(long millisUntilFinished) {
 
                 int seconds = (int) (millisUntilFinished / 1000);
                 seconds = seconds % 60;
                 tv.setText("Test recording ends in: " + String.format("%02d", seconds));
-               tv.setVisibility(View.GONE);
+                tv.setVisibility(View.GONE);
                 tv.setVisibility(View.VISIBLE);
             }
 
             public void onFinish() {
                 tv.setText("When finished processing, you could\n" +
-                        "find results under Recorded data");
+                        "find your results under Recorded data");
                 browser.loadUrl("javascript:setStatus('Processing');");
             }
         }.start();
