@@ -263,7 +263,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     final class wvClient extends WebViewClient {
         public void onPageFinished(WebView view, String url) {
             // when our web page is loaded, let's call a function that is contained within the page
-            // this is functionally equivalent to placing an onload attribute in the <body> tag
+            // this is functionally equivalent to placing an on load attribute in the <body> tag
             // whenever the loadUrl method is used, we are essentially "injecting" code into the page when it is prefixed with "javascript:"
             browser.loadUrl("javascript:startup()");
         }
