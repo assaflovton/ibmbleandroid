@@ -6,10 +6,11 @@
         <entry key="..\:/Users/assaf/AndroidStudioProjects/ibmbleandroid/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.2890625" />
         <entry key="..\:/Users/assaf/AndroidStudioProjects/ibmbleandroid/app/src/main/res/drawable/ic_launcher_background.xml" value="0.24166666666666667" />
         <entry key="..\:/Users/assaf/AndroidStudioProjects/ibmbleandroid/app/src/main/res/layout/activity_login.xml" value="0.25" />
-        <entry key="..\:/Users/assaf/AndroidStudioProjects/ibmbleandroid/app/src/main/res/layout/activity_main.xml" value="0.125" />
+        <entry key="..\:/Users/assaf/AndroidStudioProjects/ibmbleandroid/app/src/main/res/layout/activity_main.xml" value="0.335" />
         <entry key="..\:/Users/assaf/AndroidStudioProjects/ibmbleandroid/app/src/main/res/layout/activity_main2.xml" value="0.14947916666666666" />
         <entry key="..\:/Users/assaf/AndroidStudioProjects/ibmbleandroid/app/src/main/res/layout/activity_register.xml" value="0.165" />
-        <entry key="..\:/Users/assaf/AndroidStudioProjects/ibmbleandroid/app/src/main/res/layout/activity_samples.xml" value="0.25" />
+        <entry key="..\:/Users/assaf/AndroidStudioProjects/ibmbleandroid/app/src/main/res/layout/activity_samples.xml" value="0.335" />
+        <entry key="..\:/Users/assaf/AndroidStudioProjects/ibmbleandroid/app/src/main/res/layout/activity_splash_screen.xml" value="0.2947916666666667" />
         <entry key="..\:/Users/assaf/AndroidStudioProjects/ibmbleandroid/app/src/main/res/layout/custom_dialog.xml" value="0.27395833333333336" />
         <entry key="..\:/Users/assaf/AndroidStudioProjects/ibmbleandroid/app/src/main/res/layout/line_point_formatter_with_labels.xml" value="0.15260416666666668" />
         <entry key="..\:/Users/assaf/AndroidStudioProjects/ibmbleandroid/app/src/main/res/layout/line_point_formatter_with_labels_2.xml" value="0.15260416666666668" />

@@ -5,5 +5,5 @@
     vertexPaint.color="#2196F3"
     vertexPaint.strokeWidth="4dp"
     fillPaint.color="#00000000"
-
+    pointLabelFormatter.textPaint.color="#FFFFFF"
     />

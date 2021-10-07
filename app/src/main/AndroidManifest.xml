@@ -27,13 +27,13 @@
             android:exported="true"
             android:screenOrientation="landscape" />
         <activity
-            android:name=".Register"
+            android:name=".RegisterActivity"
             android:exported="true"
             android:screenOrientation="portrait" />
         <activity
             android:name=".LoginActivity"
             android:exported="true"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

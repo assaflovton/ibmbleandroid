@@ -4,7 +4,10 @@
     <color name="colorPrimaryDark">#0176AA</color>
     <color name="colorAccent">#2196F3</color>
     <color name="button">#00BCFF</color>
-    <color name="background">#303030</color>
+    <color name="background">#0E0E0E</color>
     <color name="text">#FFFFFF</color>
     <color name="textHint">#A9A9A9</color>
+    <color name="MS">#D845FF</color>
+    <color name="HS">#FFFF00</color>
+    <color name="TO">#E53935</color>
 </resources>

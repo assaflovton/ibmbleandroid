@@ -6,7 +6,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/ap_black"
-    tools:context=".SamplesActivity">
+    tools:context=".SamplesActivity"
+    android:zAdjustment="top">
 
     <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="match_parent"
@@ -22,24 +23,47 @@
             android:orientation="horizontal"
             android:layout_marginVertical="10dp">
 
+
             <CheckBox
-                android:id="@+id/labels_cb"
+                android:id="@+id/MS"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Labels"
-                android:layout_marginLeft="20dp"
-                android:textColor="@color/text"
-                android:buttonTint="@color/text"
-                android:layout_weight="0.1"
+                android:text="MS"
+                android:layout_marginLeft="5dp"
+                android:textColor="@color/MS"
+                android:buttonTint="@color/MS"
+                android:layout_weight="0"
                 android:textSize="20dp"
                 android:gravity="center"
                 android:checked="true"
                 android:layout_gravity="center"></CheckBox>
-            <TextView
+            <CheckBox
+                android:id="@+id/HS"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text=" "
-                android:layout_weight="1"></TextView>
+                android:text="HS"
+                android:layout_marginLeft="5dp"
+                android:textColor="@color/HS"
+                android:buttonTint="@color/HS"
+                android:layout_weight="0"
+                android:textSize="20dp"
+                android:gravity="center"
+                android:checked="true"
+                android:layout_gravity="center"></CheckBox>
+            <CheckBox
+                android:id="@+id/TO"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TO"
+                android:layout_marginLeft="5dp"
+                android:textColor="@color/TO"
+                android:buttonTint="@color/TO"
+                android:layout_weight="0"
+                android:textSize="20dp"
+                android:gravity="center"
+                android:checked="true"
+                android:layout_gravity="center"></CheckBox>
+
             <Spinner
                 android:id="@+id/spinner"
                 android:layout_width="wrap_content"
@@ -47,16 +71,19 @@
                 android:layout_marginHorizontal="80dp"
                 android:layout_gravity="center"
                 android:backgroundTint="@color/button"
-
                 android:paddingHorizontal="40dp"
                 android:layout_weight="0"
                 android:textAlignment="center"
                 android:textColor="@color/text"></Spinner>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=" "
-                android:layout_weight="1.5"></TextView>
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="25dp"
+                android:layout_gravity="center"
+                android:src="@drawable/share"
+                android:layout_marginLeft="5dp"
+
+                android:background="@color/ap_transparent"
+                ></ImageView>
             
             <ImageView
                 android:id="@+id/trash_im"

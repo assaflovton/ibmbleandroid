@@ -6,6 +6,7 @@
             integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
             crossorigin="anonymous"></script>
 </head>
+
 <script language="JavaScript">
 function startup() {
 	try {
@@ -31,6 +32,8 @@ function setStatus(s) {
     document.getElementById('status').innerHTML = s;
 
 }
+
+
 </script>
 <style>
 
@@ -54,14 +57,46 @@ function setStatus(s) {
     padding: 10px;
     border: 5px solid #00BCFF;
 }
+.button {
+  cursor: pointer;
+  outline: none;
+  border: none;
+  padding: 20px 20px;
+  background-color: #00BCFF;
+  border: none;
+  color: white;
+  width:180px;
+  height:70px;
+  gravity:center;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+
+.button:active {
+  background-color: #00BCFF;
+   -webkit-animation-name: grow;
+   -webkit-animation-duration: 0.3s;
+}
+
+@keyframes grow {
+    from {
+        transform: scale(1);
+    }
+    to {
+        transform: scale(0.95);
+    }
+}
 </style>
-<body style="background-color:#303030;">
+<body style="background-color:#0E0E0E;">
 <center>
 
-    <button onclick="go();" , style ="background-color: #00BCFF; border: none;
-  color: white; width:180px; height:70px; gravity:center; padding: 20px 20px; text-align: center; text-decoration: none; display: inline-block; font-weight: bold;
-  font-size: 20px;" >  Connect  </button>
-    <h3 id="status", style="width:150px; padding: 20px 10px; color:white;" >Disconnected</h3>
+    <button onclick="go();" , class="button"  > Connect</button>
+
+    <h3 id="status" , style="width:150px; padding: 20px 10px; color:white;">Disconnected</h3>
 
 
 </center>

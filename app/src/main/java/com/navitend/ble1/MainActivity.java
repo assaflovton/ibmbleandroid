@@ -13,6 +13,7 @@ import android.bluetooth.le.ScanRecord;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.PorterDuff;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -21,6 +22,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.ParcelUuid;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -107,6 +109,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         logo.setOnClickListener(this);
         data_btn = findViewById(R.id.recorded_data_btn);
         data_btn.setOnClickListener(this);
+        buttonEffect(data_btn);
         status_view = findViewById(R.id.status_main);
         //the record checkbox
         test_cb = findViewById(R.id.test_cb);
@@ -119,8 +122,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         vibration_picker.setMinValue(0);
         vibration_picker.setOnValueChangedListener((numberPicker, oldVal, newVal) -> {
         });
-        //logo spin
-        rotateAnimation();
+        //make the logo spin after half a second
+        new java.util.Timer().schedule(
+                new java.util.TimerTask() {
+                    @Override
+                    public void run() {
+                        rotateAnimation();
+                    }
+                },
+                500
+        );
         //get data from login activity
         Intent intent = getIntent();
         curr_email = intent.getStringExtra("email");
@@ -209,7 +220,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-
     public void chooseMode() {
 
         int vibration_level = vibration_picker.getValue();
@@ -244,19 +254,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.logo_iv_main:
                 rotateAnimation();
                 break;
-            case R.id.recorded_data_btn:
-                switchActivityToSamplesActivity();
-                break;
 
 
         }
-
-    }
-
-    private void switchActivityToSamplesActivity() {
-        Intent switchActivityIntent = new Intent(this, SamplesActivity.class);
-        switchActivityIntent.putExtra("email", curr_email);
-        startActivity(switchActivityIntent);
 
     }
 
@@ -872,15 +872,78 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 
+    /* we need this because when we press back we don't recreate the activity but we call
+     * the old instance of it, that means that the fade effects won't happen therefore
+     * so we need to override the onNewIntent to add the effects...
+     * I we don't recreate the activity because its a waste of resources
+     */
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        overridePendingTransition(R.transition.fade_in_samples, R.transition.fade_out_samples);
+    }
+
+    // move to the graph activity
+    private void switchActivityToSamplesActivity() {
+        Intent switchActivityIntent = new Intent(this, SamplesActivity.class);
+        switchActivityIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        switchActivityIntent.putExtra("email", curr_email);
+        startActivity(switchActivityIntent);
+        overridePendingTransition(R.transition.fade_in_samples, R.transition.fade_out_samples);
+    }
+
+    // move to the login activity
+    private void switchToLoginActivity() {
+        Intent switchActivityIntent = new Intent(this, LoginActivity.class);
+        startActivity(switchActivityIntent);
+        overridePendingTransition(R.transition.fade_in_samples, R.transition.fade_out_samples);
+
+    }
+
+    @Override
+    public void onBackPressed() {
+        switchToLoginActivity();
+    }
+
     // add spin animation of the logo
     private void rotateAnimation() {
         rotate_animation = AnimationUtils.loadAnimation(this, R.anim.rotate);
         logo.startAnimation(rotate_animation);
     }
 
+    public void buttonEffect(View button) {
+        button.setOnTouchListener(new View.OnTouchListener() {
+
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN: {
+                        //v.getBackground().setAlpha(240);//make the shadow effect
+                        v.setAlpha((float) 0.93);
+                        Animation click_animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.scale);
+                        v.startAnimation(click_animation);
+
+                        v.invalidate();
+                        break;
+                    }
+                    case MotionEvent.ACTION_UP: {
+                        v.setAlpha((float) 1);
+                        v.invalidate();
+                        switch (v.getId()) {
+                            case R.id.recorded_data_btn:
+                                switchActivityToSamplesActivity();//move to the graph activity
+                                break;
+                        }
+                        break;
+                    }
+                }
+                return false;
+            }
+        });
+    }
+
     public void reverseTimer(int Seconds, final TextView tv) {
 
-        new CountDownTimer(Seconds * 1000 , 1000) {
+        new CountDownTimer(Seconds * 1000, 1000) {
             public void onTick(long millisUntilFinished) {
 
                 int seconds = (int) (millisUntilFinished / 1000);

@@ -37,7 +37,10 @@ import android.app.AlertDialog;
 public class SamplesActivity extends AppCompatActivity implements View.OnClickListener {
     private Spinner samples_spinner;
     private String curr_email;
-    private CheckBox labels_cb;
+
+    private CheckBox ms_cb;
+    private CheckBox hs_cb;
+    private CheckBox to_cb;
     private ImageView trash_im;
     private List<String> samples_dates;
     private HashMap<String, SampleData> samples;
@@ -52,8 +55,13 @@ public class SamplesActivity extends AppCompatActivity implements View.OnClickLi
         setContentView(R.layout.activity_samples);
         // connect ui to code
         samples_spinner = findViewById(R.id.spinner);
-        labels_cb = findViewById(R.id.labels_cb);
-        labels_cb.setOnClickListener(SamplesActivity.this);
+
+        ms_cb = findViewById(R.id.MS);
+        ms_cb.setOnClickListener(SamplesActivity.this);
+        hs_cb = findViewById(R.id.HS);
+        hs_cb.setOnClickListener(SamplesActivity.this);
+        to_cb = findViewById(R.id.TO);
+        to_cb.setOnClickListener(SamplesActivity.this);
         trash_im = findViewById(R.id.trash_im);
         trash_im.setOnClickListener(SamplesActivity.this);
         plot = findViewById(R.id.plot);
@@ -87,18 +95,25 @@ public class SamplesActivity extends AppCompatActivity implements View.OnClickLi
         if (samples.get(key).data_x != null || samples.get(key).data_x.size() != 0) {
 
             Number[] seriesNumbers = new Number[samples.get(key).data_x.size() * 2];
+            int freq_of_labels = 4;
+
+
             //make an interleaved list of the data [x1,y1,x2,y2....]
             for (int i = 0; i < samples.get(key).data_x.size() * 2; i += 2) {
                 seriesNumbers[i] = (samples.get(key).data_x.get(i / 2) - samples.get(key).data_x.get(0));
                 seriesNumbers[i + 1] = samples.get(key).data_y.get(i / 2);
             }
+
+
             // create the arrays in the format androidplot works with
             XYSeries series = new SimpleXYSeries(
                     Arrays.asList(seriesNumbers), SimpleXYSeries.ArrayFormat.XY_VALS_INTERLEAVED, "Data");
-            LineAndPointFormatter seriesFormat =
-                    new LineAndPointFormatter(this, R.xml.line_point_formatter_with_labels);
+
+            LineAndPointFormatter seriesFormatData =
+                    new LineAndPointFormatter(this, R.xml.line_point_formatter_with_no_labels);
             // add the data
-            plot.addSeries(series, seriesFormat);
+            plot.addSeries(series, seriesFormatData);
+
         }
 
         if (samples.get(key).hs != null || samples.get(key).hs.size() != 0) {
@@ -115,7 +130,7 @@ public class SamplesActivity extends AppCompatActivity implements View.OnClickLi
 
             LineAndPointFormatter seriesFormatHS;
 
-            if (labels_cb.isChecked()) {
+            if (hs_cb.isChecked()) {
                 seriesFormatHS =
                         new LineAndPointFormatter(this, R.xml.line_point_formatter_with_labels_hs);
             } else {
@@ -139,7 +154,7 @@ public class SamplesActivity extends AppCompatActivity implements View.OnClickLi
 
             // create formatters, if labels is not check use the xml with transparent labels
             LineAndPointFormatter seriesFormatMS;
-            if (labels_cb.isChecked()) {
+            if (ms_cb.isChecked()) {
                 seriesFormatMS =
                         new LineAndPointFormatter(this, R.xml.line_point_formatter_with_labels_ms);
             } else {
@@ -160,7 +175,7 @@ public class SamplesActivity extends AppCompatActivity implements View.OnClickLi
 
             // create formatters, if labels is not check use the xml with transparent labels
             LineAndPointFormatter seriesFormatTO;
-            if (labels_cb.isChecked()) {
+            if (to_cb.isChecked()) {
                 seriesFormatTO =
                         new LineAndPointFormatter(this, R.xml.line_point_formatter_with_labels_to);
             } else {
@@ -301,7 +316,23 @@ public class SamplesActivity extends AppCompatActivity implements View.OnClickLi
                         .setNegativeButton("No", dialogClickListener).show();
                 break;
             // handle pressing the labels checkbox
-            case R.id.labels_cb:
+            case R.id.MS:
+                if (key == null) { // there is no graph drawn
+                    return;
+                }
+                drawGraph(key);//redraw the graph with or without labels
+                plot.setVisibility(View.GONE);//refresh so the changes will take place
+                plot.setVisibility(View.VISIBLE);
+                break;
+            case R.id.HS:
+                if (key == null) { // there is no graph drawn
+                    return;
+                }
+                drawGraph(key);//redraw the graph with or without labels
+                plot.setVisibility(View.GONE);//refresh so the changes will take place
+                plot.setVisibility(View.VISIBLE);
+                break;
+            case R.id.TO:
                 if (key == null) { // there is no graph drawn
                     return;
                 }
@@ -312,4 +343,30 @@ public class SamplesActivity extends AppCompatActivity implements View.OnClickLi
         }
 
     }
+
+    // move to the main activity
+    private void switchToMainActivity() {
+        Intent switchActivityIntent = new Intent(this, MainActivity.class);
+        switchActivityIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        startActivity(switchActivityIntent);
+
+    }
+
+    /*
+     * we need this because when we press back we don't recreate the activity but we call
+     * the old instance of it, that means that the fade effects won't happen therefore
+     * so we need to override the onNewIntent to add the effects...
+     * I we don't recreate the activity because its a waste of resources
+     */
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        overridePendingTransition(R.transition.fade_in_samples, R.transition.fade_out_samples);
+    }
+
+    @Override
+    public void onBackPressed() {
+        switchToMainActivity();
+    }
+
 }
