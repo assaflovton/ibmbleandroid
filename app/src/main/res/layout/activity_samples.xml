@@ -6,8 +6,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/ap_black"
-    tools:context=".SamplesActivity"
-    android:zAdjustment="top">
+    android:zAdjustment="top"
+    tools:context=".SamplesActivity">
 
     <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="match_parent"
@@ -19,80 +19,82 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:layout_marginVertical="10dp"
             android:layout_weight="1"
-            android:orientation="horizontal"
-            android:layout_marginVertical="10dp">
+            android:orientation="horizontal">
 
 
             <CheckBox
                 android:id="@+id/MS"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="MS"
+                android:layout_gravity="center"
                 android:layout_marginLeft="5dp"
-                android:textColor="@color/MS"
-                android:buttonTint="@color/MS"
                 android:layout_weight="0"
-                android:textSize="20dp"
-                android:gravity="center"
+                android:buttonTint="@color/MS"
                 android:checked="true"
-                android:layout_gravity="center"></CheckBox>
+                android:gravity="center"
+                android:text="MS"
+                android:textColor="@color/MS"
+                android:textSize="20dp"></CheckBox>
+
             <CheckBox
                 android:id="@+id/HS"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="HS"
+                android:layout_gravity="center"
                 android:layout_marginLeft="5dp"
-                android:textColor="@color/HS"
-                android:buttonTint="@color/HS"
                 android:layout_weight="0"
-                android:textSize="20dp"
-                android:gravity="center"
+                android:buttonTint="@color/HS"
                 android:checked="true"
-                android:layout_gravity="center"></CheckBox>
+                android:gravity="center"
+                android:text="HS"
+                android:textColor="@color/HS"
+                android:textSize="20dp"></CheckBox>
+
             <CheckBox
                 android:id="@+id/TO"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="TO"
+                android:layout_gravity="center"
                 android:layout_marginLeft="5dp"
-                android:textColor="@color/TO"
-                android:buttonTint="@color/TO"
                 android:layout_weight="0"
-                android:textSize="20dp"
-                android:gravity="center"
+                android:buttonTint="@color/TO"
                 android:checked="true"
-                android:layout_gravity="center"></CheckBox>
+                android:gravity="center"
+                android:text="TO"
+                android:textColor="@color/TO"
+                android:textSize="20dp"></CheckBox>
 
             <Spinner
                 android:id="@+id/spinner"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="80dp"
                 android:layout_gravity="center"
+                android:layout_marginHorizontal="80dp"
+                android:layout_weight="0"
                 android:backgroundTint="@color/button"
                 android:paddingHorizontal="40dp"
-                android:layout_weight="0"
                 android:textAlignment="center"
                 android:textColor="@color/text"></Spinner>
+
             <ImageView
+                android:id="@+id/share"
                 android:layout_width="30dp"
                 android:layout_height="25dp"
                 android:layout_gravity="center"
-                android:src="@drawable/share"
                 android:layout_marginLeft="5dp"
-
                 android:background="@color/ap_transparent"
-                ></ImageView>
-            
+                android:src="@drawable/share"></ImageView>
+
             <ImageView
                 android:id="@+id/trash_im"
                 android:layout_width="30dp"
                 android:layout_height="25dp"
-                android:src="@drawable/trash"
-                android:layout_weight="0.1"
                 android:layout_gravity="center"
                 android:layout_marginRight="20dp"
+                android:layout_weight="0.1"
+                android:src="@drawable/trash"
 
 
                 ></ImageView>
