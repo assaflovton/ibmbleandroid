@@ -310,18 +310,16 @@ public class SamplesActivity extends AppCompatActivity implements View.OnClickLi
     @Override
     //handle the delete icon and the label checkbox
     public void onClick(View view) {
+        if (key == null) { // there is no graph nothing to do
+            return;
+        }
         switch (view.getId()) {
             // handle pressing the trashcan
             case R.id.trash_im:
-                if (key == null) { // there are no samples to delete
-                    return;
-                }
                 //generates the pop up of are you sure you want to delete this sample...
                 DialogInterface.OnClickListener dialogClickListener = (dialog, which) -> {
-
                     switch (which) {
                         case DialogInterface.BUTTON_POSITIVE:
-
                             //Yes button clicked
                             deleteSample(key);
                             break;
@@ -334,38 +332,27 @@ public class SamplesActivity extends AppCompatActivity implements View.OnClickLi
                 builder.setMessage("Are you sure you want to delete\n" + key + " sample?").setPositiveButton("Yes", dialogClickListener)
                         .setNegativeButton("No", dialogClickListener).show();
                 break;
-            // handle pressing the labels checkbox
+            // handle pressing the labels checkbox of MS
             case R.id.MS:
-                if (key == null) { // there is no graph drawn
-                    return;
-                }
                 drawGraph(key);//redraw the graph with or without labels
                 plot.setVisibility(View.GONE);//refresh so the changes will take place
                 plot.setVisibility(View.VISIBLE);
                 break;
+            // handle pressing the labels checkbox of HS
             case R.id.HS:
-                if (key == null) { // there is no graph drawn
-                    return;
-                }
                 drawGraph(key);//redraw the graph with or without labels
                 plot.setVisibility(View.GONE);//refresh so the changes will take place
                 plot.setVisibility(View.VISIBLE);
                 break;
+            // handle pressing the labels checkbox of TO
             case R.id.TO:
-                if (key == null) { // there is no graph drawn
-                    return;
-                }
                 drawGraph(key);//redraw the graph with or without labels
                 plot.setVisibility(View.GONE);//refresh so the changes will take place
                 plot.setVisibility(View.VISIBLE);
                 break;
             case R.id.share:
-                if (key == null) { // there are no samples to share
-                    return;
-                }
-                //generates the pop up of are you sure you want to delete this sample...
+                //generates the pop up of how would you like to share this sample...
                 DialogInterface.OnClickListener dialogClickListenerShare = (dialog, which) -> {
-
                     switch (which) {
                         case DialogInterface.BUTTON_POSITIVE:
                             //share as image button clicked
@@ -380,7 +367,6 @@ public class SamplesActivity extends AppCompatActivity implements View.OnClickLi
                             } catch (UnsupportedEncodingException e) {
                                 e.printStackTrace();
                             }
-
                             break;
                     }
                 };
@@ -388,52 +374,39 @@ public class SamplesActivity extends AppCompatActivity implements View.OnClickLi
                 builderShare.setMessage("How would you like to share \n" + key + " sample?").setPositiveButton("Share as an image", dialogClickListenerShare)
                         .setNegativeButton("Share as text", dialogClickListenerShare).show();
                 break;
-
         }
     }
 
+    //creates a text in a csv format ready to be shared as plain text
     private void shareAsTextpressed() throws FileNotFoundException, UnsupportedEncodingException {
         Intent sharingIntent = new Intent(Intent.ACTION_SEND);
         sharingIntent.setType("text/plain");
-        String data_x = "time : ";
-        String data_y = "angular velocity : ";
-        String data_x_ms = "time MS : ";
-        String data_y_ms = "angular velocity MS : ";
-        String data_x_hs = "time HS : ";
-        String data_y_hs = "angular velocity HS : ";
-        String data_x_to = "time TO : ";
-        String data_y_to = "angular velocity TO : ";
-
+        String csv = "time, angular_velocity, time_MS, angular_velocity_MS, time_HS, angular_velocity_HS, time_TO, angular_velocity_TO\n";
         for (int i = 0; i < samples.get(key).data_x.size(); i++) {
-           data_x += samples.get(key).data_x.get(i).toString()+ ", ";
-           data_y += samples.get(key).data_y.get(i).toString()+ ", ";
+
+            csv += samples.get(key).data_x.get(i).toString() + ", ";
+            csv += samples.get(key).data_y.get(i).toString() + ",";
+            if (i < samples.get(key).ms.size()) {
+                csv += " " + samples.get(key).ms_time.get(i).toString() + ", ";
+                csv += samples.get(key).ms.get(i).toString() + ",";
+            } else {
+                csv += ",,";
+            }
+            if (i < samples.get(key).hs.size()) {
+                csv += " " + samples.get(key).hs_time.get(i).toString() + ", ";
+                csv += samples.get(key).hs.get(i).toString() + ",";
+            } else {
+                csv += ",,";
+            }
+            if (i < samples.get(key).to.size()) {
+                csv += " " + samples.get(key).to_time.get(i).toString() + ", ";
+                csv += samples.get(key).to.get(i).toString() + "\n";
+            } else {
+                csv += ",\n";
+            }
         }
-        for (int i = 0; i < samples.get(key).ms.size(); i++) {
-            data_x_ms += samples.get(key).ms_time.get(i).toString()+ ", ";
-            data_y_ms += samples.get(key).ms.get(i).toString()+ ", ";
-        }
-        for (int i = 0; i < samples.get(key).hs.size(); i++) {
-            data_x_hs += samples.get(key).hs_time.get(i).toString()+ ", ";
-            data_y_hs += samples.get(key).hs.get(i).toString()+ ", ";
-        }
-        for (int i = 0; i < samples.get(key).to.size(); i++) {
-            data_x_to += samples.get(key).to_time.get(i).toString()+ ", ";
-            data_y_to += samples.get(key).to.get(i).toString()+ ", ";
-        }
-        String tot = data_x.substring(0,data_x.length()-2) + "\n" + data_y.substring(0,data_y.length()-2)+"\n"+
-                data_x_ms.substring(0,data_x_ms.length()-2) + "\n"+ data_y_ms.substring(0,data_y_ms.length()-2) + "\n"+
-                data_x_to.substring(0,data_x_to.length()-2) +"\n"+ data_y_to.substring(0,data_y_to.length()-2) + "\n" +
-                data_x_hs.substring(0,data_x_hs.length()-2) + "\n"+ data_y_hs.substring(0,data_y_hs.length()-2);
-
-       sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, tot);
-
-
-
-
-
-
+        sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, csv);
         startActivity(Intent.createChooser(sharingIntent, "Share using"));
-
     }
 
     private void shareAsImagePressed(View v) {
