@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
@@ -32,6 +33,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
     private final String tag = "Register Activity: ";
     private FirebaseAuth mAuth;
     private Button register_btn;
+    TextView walk_better_tv;
     private EditText name_et;
     private EditText email_et;
     private EditText password_et;
@@ -48,6 +50,12 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         // ui objects
         register_btn = findViewById(R.id.register_btn);
         register_btn.setOnClickListener(this);
+        //add the fade in animation
+        walk_better_tv = findViewById(R.id.walk_better_register_tv);
+        AlphaAnimation fadeIn = new AlphaAnimation( 0.0f, 1.0f );
+        walk_better_tv.startAnimation(fadeIn);
+        fadeIn.setDuration(3000);
+        fadeIn.setFillAfter(true);
         name_et = findViewById(R.id.name_reg_et);
         email_et = findViewById(R.id.email_reg_et);
         password_et = findViewById(R.id.password_reg_et);
@@ -126,6 +134,10 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         switchActivityIntent.putExtra("email", email);
         startActivity(switchActivityIntent);
         overridePendingTransition(R.transition.fade_in_main,R.transition.fade_out);
+    }
+
+    public void onBackPressed() {
+        switchToLoginActivity();
     }
 
     // regarding logo spin

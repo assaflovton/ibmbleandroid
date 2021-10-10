@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
@@ -26,9 +27,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private final String tag = "Login activity:  ";
     Animation rotate_animation;
     ImageView logo_iv;
+    TextView walk_better_tv;
     private Button login_btn;
-
-
     private TextView register_tv;
     private EditText email_et;
     private EditText password_et;
@@ -41,8 +41,15 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        //add the fade in animation
+        walk_better_tv = findViewById(R.id.walk_better_tv);
+        AlphaAnimation fadeIn = new AlphaAnimation( 0.0f, 1.0f );
+        walk_better_tv.startAnimation(fadeIn);
+        fadeIn.setDuration(3000);
+        fadeIn.setFillAfter(true);
         login_btn = findViewById(R.id.login_btn);
         login_btn.setOnClickListener(this);
+        // make it smaller when pressed
         buttonEffect(login_btn);
         email_et = findViewById(R.id.email_et);
         password_et = findViewById(R.id.password_et);

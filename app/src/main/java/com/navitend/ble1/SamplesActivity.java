@@ -13,10 +13,11 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.CheckBox;
 import android.widget.ImageView;
@@ -30,13 +31,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.io.File;
-import java.io.FileInputStream;
+
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,7 +58,7 @@ public class SamplesActivity extends AppCompatActivity implements View.OnClickLi
     private List<String> samples_dates;
     private HashMap<String, SampleData> samples;
     private XYPlot plot; // the graph object
-    final String empty = "There is no data recorded"; //the graph titlel if there are no samples
+    final String empty = "There is no data recorded"; //the graph title if there are no samples
     String key = null;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -79,8 +76,12 @@ public class SamplesActivity extends AppCompatActivity implements View.OnClickLi
         to_cb.setOnClickListener(SamplesActivity.this);
         trash_im = findViewById(R.id.trash_im);
         trash_im.setOnClickListener(SamplesActivity.this);
+        //add the scale animation
+        buttonEffect(trash_im);
         share_im = findViewById(R.id.share);
         share_im.setOnClickListener(SamplesActivity.this);
+        //add the scale animation
+        buttonEffect(share_im);
         plot = findViewById(R.id.plot);
         // get the current logged in user from the past activity
         Intent intent = getIntent();
@@ -95,6 +96,7 @@ public class SamplesActivity extends AppCompatActivity implements View.OnClickLi
         }
         plot.setVisibility(View.GONE); // for changes to take place
         plot.setVisibility(View.VISIBLE);
+
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -314,71 +316,21 @@ public class SamplesActivity extends AppCompatActivity implements View.OnClickLi
             return;
         }
         switch (view.getId()) {
-            // handle pressing the trashcan
-            case R.id.trash_im:
-                //generates the pop up of are you sure you want to delete this sample...
-                DialogInterface.OnClickListener dialogClickListener = (dialog, which) -> {
-                    switch (which) {
-                        case DialogInterface.BUTTON_POSITIVE:
-                            //Yes button clicked
-                            deleteSample(key);
-                            break;
-                        case DialogInterface.BUTTON_NEGATIVE:
-                            //No button clicked
-                            break;
-                    }
-                };
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setMessage("Are you sure you want to delete\n" + key + " sample?").setPositiveButton("Yes", dialogClickListener)
-                        .setNegativeButton("No", dialogClickListener).show();
-                break;
             // handle pressing the labels checkbox of MS
             case R.id.MS:
-                drawGraph(key);//redraw the graph with or without labels
-                plot.setVisibility(View.GONE);//refresh so the changes will take place
-                plot.setVisibility(View.VISIBLE);
-                break;
-            // handle pressing the labels checkbox of HS
+                // handle pressing the labels checkbox of HS
             case R.id.HS:
-                drawGraph(key);//redraw the graph with or without labels
-                plot.setVisibility(View.GONE);//refresh so the changes will take place
-                plot.setVisibility(View.VISIBLE);
-                break;
-            // handle pressing the labels checkbox of TO
+                // handle pressing the labels checkbox of TO
             case R.id.TO:
                 drawGraph(key);//redraw the graph with or without labels
                 plot.setVisibility(View.GONE);//refresh so the changes will take place
                 plot.setVisibility(View.VISIBLE);
                 break;
-            case R.id.share:
-                //generates the pop up of how would you like to share this sample...
-                DialogInterface.OnClickListener dialogClickListenerShare = (dialog, which) -> {
-                    switch (which) {
-                        case DialogInterface.BUTTON_POSITIVE:
-                            //share as image button clicked
-                            shareAsImagePressed(plot);
-                            break;
-                        case DialogInterface.BUTTON_NEGATIVE:
-                            //share as text button clicked
-                            try {
-                                shareAsTextpressed();
-                            } catch (FileNotFoundException e) {
-                                e.printStackTrace();
-                            } catch (UnsupportedEncodingException e) {
-                                e.printStackTrace();
-                            }
-                            break;
-                    }
-                };
-                AlertDialog.Builder builderShare = new AlertDialog.Builder(this);
-                builderShare.setMessage("How would you like to share \n" + key + " sample?").setPositiveButton("Share as an image", dialogClickListenerShare)
-                        .setNegativeButton("Share as text", dialogClickListenerShare).show();
-                break;
         }
     }
 
     //creates a text in a csv format ready to be shared as plain text
-    private void shareAsTextpressed() throws FileNotFoundException, UnsupportedEncodingException {
+    private void shareAsTextPressed() throws FileNotFoundException, UnsupportedEncodingException {
         Intent sharingIntent = new Intent(Intent.ACTION_SEND);
         sharingIntent.setType("text/plain");
         String csv = "time, angular_velocity, time_MS, angular_velocity_MS, time_HS, angular_velocity_HS, time_TO, angular_velocity_TO\n";
@@ -409,19 +361,17 @@ public class SamplesActivity extends AppCompatActivity implements View.OnClickLi
         startActivity(Intent.createChooser(sharingIntent, "Share using"));
     }
 
+    //creates an png of the plot and share it
     private void shareAsImagePressed(View v) {
         v.setDrawingCacheEnabled(true);
         Bitmap icon = v.getDrawingCache();
         Intent share = new Intent(Intent.ACTION_SEND);
         share.setType("image/jpeg");
-
         ContentValues values = new ContentValues();
         values.put(MediaStore.Images.Media.TITLE, "title");
         values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
         Uri uri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 values);
-
-
         OutputStream outstream;
         try {
             outstream = getContentResolver().openOutputStream(uri);
@@ -430,11 +380,8 @@ public class SamplesActivity extends AppCompatActivity implements View.OnClickLi
         } catch (Exception e) {
             System.err.println(e.toString());
         }
-
         share.putExtra(EXTRA_STREAM, uri);
         startActivity(Intent.createChooser(share, "Share Image"));
-
-
     }
 
     // move to the main activity
@@ -460,6 +407,75 @@ public class SamplesActivity extends AppCompatActivity implements View.OnClickLi
     @Override
     public void onBackPressed() {
         switchToMainActivity();
+    }
+
+    // adds the scale and shading of the button when it pressed
+    public void buttonEffect(View button) {
+        button.setOnTouchListener(new View.OnTouchListener() {
+
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN: {
+                        v.setAlpha((float) 0.75);
+                        Animation click_animation = AnimationUtils.loadAnimation(SamplesActivity.this, R.anim.scale_harder);
+                        v.startAnimation(click_animation);
+                        v.invalidate();
+                        break;
+                    }
+                    case MotionEvent.ACTION_UP: {
+                        v.setAlpha((float) 1);
+                        v.invalidate();
+                        switch (v.getId()) {
+                            // handle pressing the trashcan
+                            case R.id.trash_im:
+                                //generates the pop up of are you sure you want to delete this sample...
+                                DialogInterface.OnClickListener dialogClickListener = (dialog, which) -> {
+                                    switch (which) {
+                                        case DialogInterface.BUTTON_POSITIVE:
+                                            //Yes button clicked
+                                            deleteSample(key);
+                                            break;
+                                        case DialogInterface.BUTTON_NEGATIVE:
+                                            //No button clicked
+                                            break;
+                                    }
+                                };
+                                AlertDialog.Builder builder = new AlertDialog.Builder(SamplesActivity.this);
+                                builder.setMessage("Are you sure you want to delete\n" + key + " sample?").setPositiveButton("Yes", dialogClickListener)
+                                        .setNegativeButton("No", dialogClickListener).show();
+                                break;
+                            case R.id.share:
+                                //generates the pop up of how would you like to share this sample...
+                                DialogInterface.OnClickListener dialogClickListenerShare = (dialog, which) -> {
+                                    switch (which) {
+                                        case DialogInterface.BUTTON_POSITIVE:
+                                            //share as image button clicked
+                                            shareAsImagePressed(plot);
+                                            break;
+                                        case DialogInterface.BUTTON_NEGATIVE:
+                                            //share as text button clicked
+                                            try {
+                                                shareAsTextPressed();
+                                            } catch (FileNotFoundException e) {
+                                                e.printStackTrace();
+                                            } catch (UnsupportedEncodingException e) {
+                                                e.printStackTrace();
+                                            }
+                                            break;
+                                    }
+                                };
+                                AlertDialog.Builder builderShare = new AlertDialog.Builder(SamplesActivity.this);
+                                builderShare.setMessage("How would you like to share \n" + key + " sample?").setPositiveButton("Share as an image", dialogClickListenerShare)
+                                        .setNegativeButton("Share as text", dialogClickListenerShare).show();
+                                break;
+
+                        }
+                        break;
+                    }
+                }
+                return false;
+            }
+        });
     }
 
 }

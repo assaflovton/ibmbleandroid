@@ -14,9 +14,25 @@
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:src="@drawable/mygatetilted"
-        android:layout_marginVertical="50dp"
+        android:layout_marginTop="50dp"
         android:layout_marginHorizontal="50dp"
        ></ImageView>
+    <TextView
+
+        android:id="@+id/walk_better_register_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="30dp"
+        android:fontFamily="serif"
+        android:gravity="center"
+        android:text="Simply walk better"
+        android:textColor="@color/text"
+        android:textStyle="italic"
+        android:textSize="18dp">
+
+    </TextView>
     <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -88,6 +104,7 @@
         android:layout_marginVertical="20dp"
         android:textColor="@color/text"
         android:background="@color/button"
+
         app:layout_constraintStart_toEndOf="@+id/password_reg_et"
         app:layout_constraintTop_toBottomOf="@+id/password_reg_et" />
 
