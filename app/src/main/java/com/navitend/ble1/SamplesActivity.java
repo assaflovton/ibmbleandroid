@@ -119,7 +119,7 @@ public class SamplesActivity extends AppCompatActivity implements View.OnClickLi
 
             //make an interleaved list of the data [x1,y1,x2,y2....]
             for (int i = 0; i < samples.get(key).data_x.size() * 2; i += 2) {
-                seriesNumbers[i] = (samples.get(key).data_x.get(i / 2) - samples.get(key).data_x.get(0));
+                seriesNumbers[i] = (samples.get(key).data_x.get(i / 2) );
                 seriesNumbers[i + 1] = samples.get(key).data_y.get(i / 2);
             }
 
@@ -140,7 +140,7 @@ public class SamplesActivity extends AppCompatActivity implements View.OnClickLi
             Number[] seriesNumbersHS = new Number[samples.get(key).hs.size() * 2];
 
             for (int i = 0; i < samples.get(key).hs.size() * 2; i += 2) {
-                seriesNumbersHS[i] = (samples.get(key).hs_time.get(i / 2) - samples.get(key).hs_time.get(0));
+                seriesNumbersHS[i] = (samples.get(key).hs_time.get(i / 2));
                 seriesNumbersHS[i + 1] = samples.get(key).hs.get(i / 2);
             }
 
@@ -164,7 +164,7 @@ public class SamplesActivity extends AppCompatActivity implements View.OnClickLi
             Number[] seriesNumbersMS = new Number[samples.get(key).ms.size() * 2];
 
             for (int i = 0; i < samples.get(key).ms.size() * 2; i += 2) {
-                seriesNumbersMS[i] = (samples.get(key).ms_time.get(i / 2) - samples.get(key).ms_time.get(0));
+                seriesNumbersMS[i] = (samples.get(key).ms_time.get(i / 2));
                 seriesNumbersMS[i + 1] = samples.get(key).ms.get(i / 2);
             }
 
@@ -185,7 +185,7 @@ public class SamplesActivity extends AppCompatActivity implements View.OnClickLi
         if (samples.get(key).to != null || samples.get(key).to.size() != 0) {
             Number[] seriesNumbersTO = new Number[samples.get(key).to.size() * 2];
             for (int i = 0; i < samples.get(key).to.size() * 2; i += 2) {
-                seriesNumbersTO[i] = (samples.get(key).to_time.get(i / 2) - samples.get(key).to_time.get(0));
+                seriesNumbersTO[i] = (samples.get(key).to_time.get(i / 2));
                 seriesNumbersTO[i + 1] = samples.get(key).to.get(i / 2);
             }
 

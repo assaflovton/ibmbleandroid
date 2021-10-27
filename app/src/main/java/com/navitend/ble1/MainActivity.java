@@ -685,30 +685,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 }
 
-
                 //scale back to zero the time
+                Integer first = 0;
                 if (data_x.size() != 0) {
-                    Integer first = data_x.get(0);
+                    first = data_x.get(0);
                     for (int i = 0; i < data_x.size(); i++) {
                         data_x.set(i, data_x.get(i) - first);
 
                     }
                 }
                 if (hs_time.size() != 0) {
-                    Integer first = hs_time.get(0);
+
                     for (int i = 0; i < hs_time.size(); i++) {
                         hs_time.set(i, hs_time.get(i) - first);
                     }
                 }
                 if (ms_time.size() != 0) {
-                    Integer first = ms_time.get(0);
+
                     for (int i = 0; i < ms_time.size(); i++) {
                         ms_time.set(i, ms_time.get(i) - first);
                     }
                 }
-
                 if (to_time.size() != 0) {
-                    Integer first = to_time.get(0);
+
                     for (int i = 0; i < to_time.size(); i++) {
                         to_time.set(i, to_time.get(i) - first);
                     }
@@ -764,7 +763,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             ScanRecord sr = result.getScanRecord();
             if (sr != null) {
                 if (sr.getDeviceName() != null) {
-                    if (sr.getDeviceName().equals("BLE Garage Opener")) {
+                    if (sr.getDeviceName().equals("MYGAIT")) {
                         bluetoothAdapter.getBluetoothLeScanner().stopScan(this);
                         mHandler.sendEmptyMessage(FOUND);
                         Log.i(tag, "Found our Garage Door Opener!");

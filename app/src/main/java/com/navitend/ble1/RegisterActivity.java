@@ -50,6 +50,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         // ui objects
         register_btn = findViewById(R.id.register_btn);
         register_btn.setOnClickListener(this);
+        buttonEffect(register_btn);
         //add the fade in animation
         walk_better_tv = findViewById(R.id.walk_better_register_tv);
         AlphaAnimation fadeIn = new AlphaAnimation( 0.0f, 1.0f );
@@ -181,6 +182,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                         v.invalidate();
                         switch (v.getId()) {
                             case R.id.register_btn:
+                                Log.i("heyyyyy", "WTF");
                                 registerUser();
                                 break;
                         }
